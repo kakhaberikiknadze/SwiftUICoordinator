@@ -106,7 +106,11 @@ public extension SwiftUICoordinator {
         to coordinator: SwiftUICoordinator<T>
     ) -> AnyPublisher<T, Never> {
         presentable = coordinator.start()
-        
+        handleDismiss(of: coordinator)
+        return coordinator.onFinish.eraseToAnyPublisher()
+    }
+    
+    func handleDismiss<T>(of coordinator: SwiftUICoordinator<T>) {
         coordinator.onFinish
             .map { _ in }
             .merge(with: coordinator.onCancel)
@@ -114,8 +118,6 @@ public extension SwiftUICoordinator {
                 self?.presentable = nil
             }
             .store(in: &cancellables)
-        
-        return coordinator.onFinish.eraseToAnyPublisher()
     }
 }
  
