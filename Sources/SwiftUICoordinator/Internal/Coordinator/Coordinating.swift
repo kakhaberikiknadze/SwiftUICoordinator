@@ -9,7 +9,7 @@ import SwiftUI
 
 protocol Coordinating: ObservableObject {
     var presentable: Presentable? { get }
-    var presentationStyle: PresentationStyle { get }
+    var presentationStyle: ModalPresentationStyle { get }
     func cancel()
 }
 

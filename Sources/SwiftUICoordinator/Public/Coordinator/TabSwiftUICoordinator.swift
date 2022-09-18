@@ -14,12 +14,11 @@ open class TabSwiftUICoordinator<CoordinationResult>: SwiftUICoordinator<Coordin
     public init(
         id: String,
         mode: CoordinatorMode,
-        presentationStyle: PresentationStyle,
         tabs: [any TabSceneProviding] = []
     ) {
         self.selection = tabs.first?.id ?? ""
         self.tabs = tabs
-        super.init(id: id, mode: mode, presentationStyle: presentationStyle)
+        super.init(id: id, mode: mode)
     }
     
     open override func createScene() -> AnyView {

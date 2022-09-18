@@ -7,44 +7,22 @@
 
 import SwiftUI
 
-struct NavigationCoordinatorView<C: Coordinating, Content: View>: View, Presentable {
-    @ObservedObject private var coordinator: C
-    public var presentationStyle: PresentationStyle { coordinator.presentationStyle }
-    public var scene: AnyView { .init(self) }
+struct NavigationCoordinatorView: View {
+    @ObservedObject private var router: NavigationRouter
     
-    private let content: () -> Content
-    
-    private var performNavigation: Bool {
-        guard case .push = coordinator.presentable?.presentationStyle else { return false }
-        return true
-    }
-    
-    init(
-        coordinator: C,
-        @ViewBuilder content: @escaping () -> Content
-    ) {
-        self.coordinator = coordinator
-        self.content = content
+    init(router: NavigationRouter) {
+        self.router = router
     }
     
     var body: some View {
-        NavigationView {
-            content()
-                .performNavigation(
-                    destination: { coordinator.presentable?.scene },
-                    isActive: .init(
-                        get: { performNavigation },
-                        set: { newValue in
-                            guard !newValue else { return }
-                            coordinator.presentable?.cancel()
-                        }
-                    )
-                )
+        NavigationStack(path: $router.presentedScenes) {
+            router.rootSceneProvider.scene
+                .navigationDestination(for: AnyNavigationScene.self) { context in
+                    context.scene
+                }
+        }
+        .onChange(of: router.presentedScenes.count) { newValue in
+            print("Presented scenes count", newValue)
         }
     }
-
-    func cancel() {
-        coordinator.cancel()
-    }
 }
-

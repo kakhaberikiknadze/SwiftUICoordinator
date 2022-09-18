@@ -8,9 +8,6 @@
 import SwiftUI
 import Combine
 
-/// Integer to track which number of instance is being deallocated
-fileprivate var instanceNumber = 0
-
 /// Abstract coordinator
 open class SwiftUICoordinator<CoordinationResult>: Coordinating {
     // MARK: - Private properties
@@ -18,13 +15,16 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
     private var cancellables = Set<AnyCancellable>()
     private let result = PassthroughSubject<CoordinationResult, Never>()
     private let dismiss = PassthroughSubject<Void, Never>()
+    private var isInNavigation: Bool
     
     // MARK: - Public properties
     
     /// Unique identifier of the coordinator
     public let id: String
     
-    private lazy var scene: AnyView = createScene()
+    private(set) lazy var scene: AnyView = createScene()
+    
+    public private(set) weak var navigationRouter: NavigationPushing?
     
     /// New scene to be presented.
     @Published private(set) var presentable: Presentable?
@@ -33,51 +33,52 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
     @Published public var tabItem: AnyView = EmptyView().erased()
     
     /// Presentation style of the `scene`to determine wether to wrap it inside navigation or not.
-    public let presentationStyle: PresentationStyle
+    public fileprivate(set) var presentationStyle: ModalPresentationStyle = .fullScreen
     
     /// Coordination mode. Either `normal` or `navigation`.
     ///
     /// If it's `navigation`, the scene is wrapped inside navigation view.
     let mode: CoordinatorMode
     
-    public var onCancel: AnyPublisher<Void, Never> { dismiss.eraseToAnyPublisher() }
-    public var onFinish: AnyPublisher<CoordinationResult, Never> { result.eraseToAnyPublisher() }
+    public var onCancel: AnyPublisher<Void, Never> { dismiss.first().eraseToAnyPublisher() }
+    public var onFinish: AnyPublisher<CoordinationResult, Never> { result.first().eraseToAnyPublisher() }
     
     // MARK: - Init
     
     public init(
         id: String,
-        mode: CoordinatorMode = .normal,
-        presentationStyle: PresentationStyle
+        mode: CoordinatorMode = .normal
     ) {
+        print(id, "Initialised!")
         self.id = id
-        self.presentationStyle = presentationStyle
         self.mode = mode
+        isInNavigation = mode == .navigation
     }
     
     deinit {
-        print("LOG FROM PARENT CLASS ========================")
-        print(
-            String(describing: Self.self), "Deinitialised!",
-            "Instance number:",
-            instanceNumber
-        )
+        print("\nLOG FROM PARENT CLASS ========================")
+        print(String(describing: Self.self) + id, "Deinitialised!")
         print("==============================================")
-        instanceNumber += 1
     }
     
     // MARK: - Methods
     
-    private func start() -> Presentable {
-        CoordinatorView(coordinator: self) { [unowned self] in
-            switch self.mode {
-            case .normal:
-                self.scene
-            case .navigation:
-                NavigationCoordinatorView(coordinator: self) { [unowned self] in
-                    self.scene
-                }
-            }
+    func start() -> Presentable {
+        print("===\n\nStarting coordinator", id , "is in navigation", mode == .navigation)
+        let content: AnyView
+        switch mode {
+        case .normal:
+            content = scene
+        case .navigation:
+            content = NavigationCoordinatorView(
+                router: NavigationRouter.init(
+                    id: "NAVIGATION_ROUTER_" + id,
+                    rootSceneProvider: self.asNavigationScene()
+                )
+            ).erased()
+        }
+        return CoordinatorView(coordinator: self) { [unowned self] in
+            content
         }
     }
     
@@ -103,18 +104,28 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
 
 public extension SwiftUICoordinator {
     func coordinate<T>(
-        to coordinator: SwiftUICoordinator<T>
+        to coordinator: SwiftUICoordinator<T>,
+        presentationStyle: ModalPresentationStyle = .fullScreen
     ) -> AnyPublisher<T, Never> {
+        coordinator.presentationStyle = presentationStyle
         presentable = coordinator.start()
         handleDismiss(of: coordinator)
+        print(id, "presented", coordinator.id)
         return coordinator.onFinish.eraseToAnyPublisher()
     }
     
     func handleDismiss<T>(of coordinator: SwiftUICoordinator<T>) {
+        coordinator.onCancel
+            .sink { [weak self, weak coordinator] _ in
+                print("Dismissed", coordinator?.id ?? "nil", "in", self?.id ?? "nil")
+                self?.presentable = nil
+            }
+            .store(in: &cancellables)
+        
         coordinator.onFinish
             .map { _ in }
-            .merge(with: coordinator.onCancel)
-            .sink { [weak self] _ in
+            .sink { [weak self] in
+                self?.presentable?.dismiss()
                 self?.presentable = nil
             }
             .store(in: &cancellables)
@@ -125,10 +136,12 @@ public extension SwiftUICoordinator {
 
 public extension SwiftUICoordinator {
     func finish(result: CoordinationResult) {
+        print("\n\n")
         self.result.send(result)
     }
     
     func cancel() {
+        print("\n\n")
         dismiss.send()
     }
 }
@@ -150,3 +163,22 @@ extension SwiftUICoordinator: TabSceneProviding {
     }
 }
 
+extension SwiftUICoordinator: Hashable {
+    public static func == (lhs: SwiftUICoordinator<CoordinationResult>, rhs: SwiftUICoordinator<CoordinationResult>) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+}
+
+extension SwiftUICoordinator: NavigationRouterChildable {
+    func setNavigationRouter<R: NavigationPushing>(_ router: R) {
+        navigationRouter = router
+    }
+}
+
+public protocol NavigationPushing: AnyObject {
+    func push<T>(_ coordinator: SwiftUICoordinator<T>) -> AnyPublisher<T, Never>
+}

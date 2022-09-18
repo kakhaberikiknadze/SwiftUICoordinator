@@ -9,6 +9,7 @@ import SwiftUI
 
 protocol Presentable {
     var scene: AnyView { get }
-    var presentationStyle: PresentationStyle { get }
+    var presentationStyle: ModalPresentationStyle { get }
     func cancel()
+    func dismiss()
 }

@@ -7,9 +7,8 @@
 
 import SwiftUI
 
-public enum PresentationStyle {
+public enum ModalPresentationStyle {
     case sheet
     case fullScreen
-    case push
     case custom(AnyTransition)
 }

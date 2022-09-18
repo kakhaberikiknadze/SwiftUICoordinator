@@ -1,6 +1,6 @@
 //
 //  PerformNavigationModifier.swift
-//  
+//
 //
 //  Created by Kakhaberi Kiknadze on 14.09.22.
 //

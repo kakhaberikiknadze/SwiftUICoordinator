@@ -8,8 +8,10 @@
 import SwiftUI
 
 struct TabCoordinatorView<C: TabCoordinating>: View, Presentable {
+    @Environment(\.isPresented) var isPresented
+    @Environment(\.dismiss) var dismissAction
     @ObservedObject private var coordinator: C
-    public var presentationStyle: PresentationStyle { coordinator.presentationStyle }
+    public var presentationStyle: ModalPresentationStyle { coordinator.presentationStyle }
     var scene: AnyView { .init(self) }
     
     @State private var selection = 0
@@ -27,10 +29,19 @@ struct TabCoordinatorView<C: TabCoordinating>: View, Presentable {
         .onChange(of: coordinator.selection, perform: { newValue in
             print("Selected tab with ID:", newValue)
         })
+        .onChange(of: isPresented) { newValue in
+            if !newValue {
+                cancel()
+            }
+        }
     }
     
     func cancel() {
         coordinator.cancel()
+    }
+    
+    func dismiss() {
+        dismissAction()
     }
 }
 
