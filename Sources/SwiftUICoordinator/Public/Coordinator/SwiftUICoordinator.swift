@@ -136,8 +136,8 @@ public extension SwiftUICoordinator {
  
 // MARK: - Finish coordination
 
-public extension SwiftUICoordinator {
-    func finish(result: CoordinationResult) {
+extension SwiftUICoordinator {
+    public func finish(result: CoordinationResult) {
         print("\n\n")
         self.result.send(result)
     }
