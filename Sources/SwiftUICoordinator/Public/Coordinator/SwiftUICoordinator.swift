@@ -77,7 +77,7 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
                 )
             ).erased()
         }
-        return CoordinatorView(coordinator: self) { [unowned self] in
+        return CoordinatorView(coordinator: self) {
             content
         }
     }
