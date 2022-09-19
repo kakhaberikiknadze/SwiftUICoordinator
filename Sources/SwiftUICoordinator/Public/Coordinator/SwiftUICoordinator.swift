@@ -65,20 +65,22 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
     
     func start() -> Presentable {
         print("===\n\nStarting coordinator", id , "is in navigation", mode == .navigation)
-        let content: AnyView
         switch mode {
         case .normal:
-            content = scene
+            return CoordinatorView(coordinator: self) { [unowned self] in
+                self.scene
+            }
         case .navigation:
-            content = NavigationCoordinatorView(
-                router: NavigationRouter.init(
+            return NavigationCoordinatorView(
+                router: .init(
                     id: "NAVIGATION_ROUTER_" + id,
-                    rootSceneProvider: self.asNavigationScene()
-                )
-            ).erased()
-        }
-        return CoordinatorView(coordinator: self) {
-            content
+                    rootSceneProvider: asNavigationScene()
+                ),
+                presentationStyle: presentationStyle,
+                onCancel: { [weak self] in
+                    self?.cancel()
+                }
+            )
         }
     }
     
