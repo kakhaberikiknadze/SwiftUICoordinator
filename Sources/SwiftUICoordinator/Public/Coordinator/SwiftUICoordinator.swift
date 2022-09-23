@@ -28,29 +28,6 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
     /// A scene to be wrapped inside `CoordinatorView` or `NavigationCoordinatorView`
     private(set) lazy var scene: AnyView = createScene()
     
-    /// Root presentation context  providing a scene wrapped inside either `CoordinatorView` or `NavigationCoordinatorView`
-    /// as well as cancelation and dismiss actions.
-    private lazy var root: PresentationContext = {
-        print("===\n\nStarting coordinator", id , "is in navigation", mode == .navigation)
-        switch mode {
-        case .normal:
-            return CoordinatorView(coordinator: self) { [unowned self] in
-                self.scene
-            }
-        case .navigation:
-            return NavigationCoordinatorView(
-                router: .init(
-                    id: "NAVIGATION_ROUTER_" + id,
-                    rootSceneProvider: asNavigationScene()
-                ),
-                presentationStyle: presentationStyle,
-                onCancel: { [weak self] in
-                    self?.cancel()
-                }
-            )
-        }
-    }()
-    
     public private(set) weak var navigationRouter: NavigationPushing?
     
     /// New scene to be presented.
@@ -98,10 +75,33 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
     
     // MARK: - Methods
     
+    /// Root presentation context  providing a scene wrapped inside either `CoordinatorView` or `NavigationCoordinatorView`
+    /// as well as cancelation and dismiss actions.
+    private func start() -> PresentationContext {
+        print("===\n\nStarting coordinator", id , "is in navigation", mode == .navigation)
+        switch mode {
+        case .normal:
+            return CoordinatorView(coordinator: self) { [unowned self] in
+                self.scene
+            }
+        case .navigation:
+            return NavigationCoordinatorView(
+                router: .init(
+                    id: "NAVIGATION_ROUTER_" + id,
+                    rootSceneProvider: asNavigationScene()
+                ),
+                presentationStyle: presentationStyle,
+                onCancel: { [weak self] in
+                    self?.cancel()
+                }
+            )
+        }
+    }
+    
     /// Get the root scene ready to be presented inside `SwiftUI` view.
     /// - Returns: Type erased view.
     public func getRoot() -> AnyView {
-        root.scene
+        start().scene
             .customTransition()
             .erased()
     }
@@ -130,7 +130,7 @@ public extension SwiftUICoordinator {
         presentationStyle: ModalPresentationStyle = .fullScreen
     ) -> AnyPublisher<T, Never> {
         coordinator.presentationStyle = presentationStyle
-        presentable = coordinator.root
+        presentable = coordinator.start()
         handleDismiss(of: coordinator)
         print(id, "presented", coordinator.id)
         return coordinator.onFinish.eraseToAnyPublisher()
@@ -182,7 +182,7 @@ public extension SwiftUICoordinator where CoordinationResult == Void {
 extension SwiftUICoordinator: TabSceneProviding {
     /// A scene ready to be presented inside `TabView`
     public var tabScene: AnyView {
-        root.scene
+        start().scene
             .tabItem { tabItem }
             .tag(id)
             .erased()

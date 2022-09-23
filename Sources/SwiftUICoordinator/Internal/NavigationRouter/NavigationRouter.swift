@@ -59,8 +59,11 @@ extension NavigationRouter: NavigationPushing {
         
         coordinator.onFinish
             .map { _ in }
-            .sink { [weak self, weak adapter] in
-                adapter?.presentable.dismiss()
+            .merge(with: coordinator.onCancel)
+            .first()
+            .sink { [weak self, unowned adapter] in
+                print("Finished", adapter.id, "Count:", self!.presentedScenes.count)
+                adapter.presentable.dismiss()
                 self?.pop()
             }
             .store(in: &cancellables)
