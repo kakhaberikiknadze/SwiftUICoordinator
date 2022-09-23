@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct TabCoordinatorView<C: TabCoordinating>: View, Presentable {
+struct TabCoordinatorView<C: TabCoordinating>: View, PresentationContext {
     @Environment(\.isPresented) var isPresented
     @Environment(\.dismiss) var dismissAction
     @ObservedObject private var coordinator: C

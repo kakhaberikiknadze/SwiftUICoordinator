@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-protocol Presentable {
+protocol PresentationContext {
     var scene: AnyView { get }
     var presentationStyle: ModalPresentationStyle { get }
     func cancel()

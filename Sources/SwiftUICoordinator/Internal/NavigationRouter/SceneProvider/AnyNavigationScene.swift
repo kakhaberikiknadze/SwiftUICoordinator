@@ -10,7 +10,7 @@ import SwiftUI
 typealias NavigationScene = SceneProviding & NavigationRouterChildable & Hashable
 
 final class AnyNavigationScene: NavigationScene {
-    let presentable: Presentable
+    let presentable: PresentationContext
     let id: String
     var scene: AnyView { presentable.scene }
     
@@ -18,7 +18,7 @@ final class AnyNavigationScene: NavigationScene {
     
     init(
         id: String,
-        presentable: Presentable,
+        presentable: PresentationContext,
         navigationRouterChildable: NavigationRouterChildable
     ) {
         self.id = id

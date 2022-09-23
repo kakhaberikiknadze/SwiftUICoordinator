@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct NavigationCoordinatorView: View, Presentable {
+struct NavigationCoordinatorView: View, PresentationContext {
     @Environment(\.isPresented) private var isPresented
     @Environment(\.dismiss) private var dismissAction
     

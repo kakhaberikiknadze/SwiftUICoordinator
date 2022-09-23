@@ -13,57 +13,24 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
     // MARK: - Private properties
     
     private var cancellables = Set<AnyCancellable>()
+    
+    /// Publishes result of a specified type.
     private let result = PassthroughSubject<CoordinationResult, Never>()
+
+    /// Triggered to terminate coordination without providing any result.
     private let dismiss = PassthroughSubject<Void, Never>()
-    private var isInNavigation: Bool
     
     // MARK: - Public properties
     
     /// Unique identifier of the coordinator
     public let id: String
     
+    /// A scene to be wrapped inside `CoordinatorView` or `NavigationCoordinatorView`
     private(set) lazy var scene: AnyView = createScene()
     
-    public private(set) weak var navigationRouter: NavigationPushing?
-    
-    /// New scene to be presented.
-    @Published private(set) var presentable: Presentable?
-    
-    /// Tab Item for `TabView`.
-    @Published public var tabItem: AnyView = EmptyView().erased()
-    
-    /// Presentation style of the `scene`to determine wether to wrap it inside navigation or not.
-    public fileprivate(set) var presentationStyle: ModalPresentationStyle = .fullScreen
-    
-    /// Coordination mode. Either `normal` or `navigation`.
-    ///
-    /// If it's `navigation`, the scene is wrapped inside navigation view.
-    let mode: CoordinatorMode
-    
-    public var onCancel: AnyPublisher<Void, Never> { dismiss.first().eraseToAnyPublisher() }
-    public var onFinish: AnyPublisher<CoordinationResult, Never> { result.first().eraseToAnyPublisher() }
-    
-    // MARK: - Init
-    
-    public init(
-        id: String,
-        mode: CoordinatorMode = .normal
-    ) {
-        print(id, "Initialised!")
-        self.id = id
-        self.mode = mode
-        isInNavigation = mode == .navigation
-    }
-    
-    deinit {
-        print("\nLOG FROM PARENT CLASS ========================")
-        print(String(describing: Self.self) + id, "Deinitialised!")
-        print("==============================================")
-    }
-    
-    // MARK: - Methods
-    
-    func start() -> Presentable {
+    /// Root presentation context  providing a scene wrapped inside either `CoordinatorView` or `NavigationCoordinatorView`
+    /// as well as cancelation and dismiss actions.
+    private lazy var root: PresentationContext = {
         print("===\n\nStarting coordinator", id , "is in navigation", mode == .navigation)
         switch mode {
         case .normal:
@@ -82,14 +49,62 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
                 }
             )
         }
+    }()
+    
+    public private(set) weak var navigationRouter: NavigationPushing?
+    
+    /// New scene to be presented.
+    @Published private(set) var presentable: PresentationContext?
+    
+    /// Tab Item for `TabView`.
+    @Published public var tabItem: AnyView = EmptyView().erased()
+    
+    /// Presentation style of the `scene`to determine wether to wrap it inside navigation or not.
+    public fileprivate(set) var presentationStyle: ModalPresentationStyle = .fullScreen
+    
+    /// Coordination mode. Either `normal` or `navigation`.
+    ///
+    /// If it's `navigation`, the scene is wrapped inside navigation view.
+    let mode: CoordinatorMode
+    
+    /// Triggered to terminate coordination without providing any result.
+    public var onCancel: AnyPublisher<Void, Never> { dismiss.first().eraseToAnyPublisher() }
+    
+    /// Triggered when coordination is finished and provides result of a specified type.
+    public var onFinish: AnyPublisher<CoordinationResult, Never> { result.first().eraseToAnyPublisher() }
+    
+    // MARK: - Init
+    
+    /// Instantiates a coordinator used for `SwiftUI.
+    /// - Parameters:
+    ///   - id: Unique identifier
+    ///   - mode: Coordination mode. Either `.normal` or  `.navigation`.
+    ///   If it's `.navigation` new `NavigationStack` will be created and the scene
+    ///   will be wrapped inside it.
+    public init(
+        id: String,
+        mode: CoordinatorMode = .normal
+    ) {
+        print(id, "Initialised!")
+        self.id = id
+        self.mode = mode
     }
     
+    deinit {
+        print("\nLOG FROM PARENT CLASS ========================")
+        print(String(describing: Self.self) + id, "Deinitialised!")
+        print("==============================================")
+    }
+    
+    // MARK: - Methods
+    
+    /// Get the root scene ready to be presented inside `SwiftUI` view.
+    /// - Returns: Type erased view.
     public func getRoot() -> AnyView {
-        start().scene
+        root.scene
             .customTransition()
             .erased()
     }
-    
     
     /// Creates a scene to be wrapped inside coordinator as a presented scene.
     ///
@@ -105,18 +120,23 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
 // MARK: - Coordinate
 
 public extension SwiftUICoordinator {
+    /// Coordinates to the provided coordinator using a presentation style.
+    /// - Parameters:
+    ///   - coordinator: A destination coordinator
+    ///   - presentationStyle: Modal presentation style. E.g.,`.sheet`, `.fullScren`, `.custom`
+    /// - Returns: A publisher containing a coordination result
     func coordinate<T>(
         to coordinator: SwiftUICoordinator<T>,
         presentationStyle: ModalPresentationStyle = .fullScreen
     ) -> AnyPublisher<T, Never> {
         coordinator.presentationStyle = presentationStyle
-        presentable = coordinator.start()
+        presentable = coordinator.root
         handleDismiss(of: coordinator)
         print(id, "presented", coordinator.id)
         return coordinator.onFinish.eraseToAnyPublisher()
     }
     
-    func handleDismiss<T>(of coordinator: SwiftUICoordinator<T>) {
+    private func handleDismiss<T>(of coordinator: SwiftUICoordinator<T>) {
         coordinator.onCancel
             .sink { [weak self, weak coordinator] _ in
                 print("Dismissed", coordinator?.id ?? "nil", "in", self?.id ?? "nil")
@@ -137,6 +157,8 @@ public extension SwiftUICoordinator {
 // MARK: - Finish coordination
 
 extension SwiftUICoordinator {
+    /// Call this to finish coordination and provide a coordination result.
+    /// - Parameter result: Coordination result
     public func finish(result: CoordinationResult) {
         print("\n\n")
         self.result.send(result)
@@ -149,6 +171,7 @@ extension SwiftUICoordinator {
 }
 
 public extension SwiftUICoordinator where CoordinationResult == Void {
+    /// Call this to finish coordination with a `Void` result.
     func finish() {
         finish(result: ())
     }
@@ -157,13 +180,16 @@ public extension SwiftUICoordinator where CoordinationResult == Void {
 // MARK: - TabSceneProviding
 
 extension SwiftUICoordinator: TabSceneProviding {
+    /// A scene ready to be presented inside `TabView`
     public var tabScene: AnyView {
-        start().scene
+        root.scene
             .tabItem { tabItem }
             .tag(id)
             .erased()
     }
 }
+
+// MARK: - Hashable
 
 extension SwiftUICoordinator: Hashable {
     public static func == (lhs: SwiftUICoordinator<CoordinationResult>, rhs: SwiftUICoordinator<CoordinationResult>) -> Bool {
@@ -175,11 +201,15 @@ extension SwiftUICoordinator: Hashable {
     }
 }
 
+// MARK: - NavigationRouterChildable
+
 extension SwiftUICoordinator: NavigationRouterChildable {
     func setNavigationRouter<R: NavigationPushing>(_ router: R) {
         navigationRouter = router
     }
 }
+
+// MARK: - NavigationPushing
 
 public protocol NavigationPushing: AnyObject {
     func push<T>(_ coordinator: SwiftUICoordinator<T>) -> AnyPublisher<T, Never>

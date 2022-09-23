@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct CoordinatorView<C: Coordinating, Content: View>: View, Presentable {
+struct CoordinatorView<C: Coordinating, Content: View>: View, PresentationContext {
     @Environment(\.isPresented) private var isPresented
     @Environment(\.dismiss) private var dismissAction
     @ObservedObject private var coordinator: C
