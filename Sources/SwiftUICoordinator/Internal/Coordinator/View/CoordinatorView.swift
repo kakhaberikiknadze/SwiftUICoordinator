@@ -85,7 +85,7 @@ struct CoordinatorView<C: Coordinating, Content: View>: View, PresentationContex
     }
 }
 
-private extension CoordinatorView {
+extension CoordinatorView {
     var showSheet: Bool {
         guard case .sheet = coordinator.presentable?.presentationStyle else { return false }
         return true

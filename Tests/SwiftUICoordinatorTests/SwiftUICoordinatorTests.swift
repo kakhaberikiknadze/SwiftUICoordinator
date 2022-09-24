@@ -145,6 +145,70 @@ final class SwiftUICoordinatorTests: XCTestCase {
         presentedCoordinator.cancel()
         waitForExpectations(timeout: 0.1)
     }
+    
+    // MARK: - CoordinatorView modal presentation
+    
+    func test_coordinator_view_show_custom_modal() {
+        let coordinator: SwiftUICoordinator<Void> = .init(id: "1", mode: .normal)
+        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2", mode: .normal)
+        
+        let coordinatorView = CoordinatorView(coordinator: coordinator) {
+            coordinator.scene
+        }
+        
+        _ = coordinator.coordinate(to: presentedCoordinator, presentationStyle: .custom(.scale))
+        XCTAssertTrue(coordinatorView.showCustomModal)
+        XCTAssertFalse(coordinatorView.showSheet)
+        XCTAssertFalse(coordinatorView.showFullScreen)
+    }
+    
+    func test_coordinator_view_show_sheet() {
+        let coordinator: SwiftUICoordinator<Void> = .init(id: "1", mode: .normal)
+        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2", mode: .normal)
+        
+        let coordinatorView = CoordinatorView(coordinator: coordinator) {
+            coordinator.scene
+        }
+        
+        _ = coordinator.coordinate(to: presentedCoordinator, presentationStyle: .sheet)
+        XCTAssertTrue(coordinatorView.showSheet)
+        XCTAssertFalse(coordinatorView.showFullScreen)
+        XCTAssertFalse(coordinatorView.showCustomModal)
+    }
+    
+    func test_coordinator_view_show_fullScreen() {
+        let coordinator: SwiftUICoordinator<Void> = .init(id: "1", mode: .normal)
+        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2", mode: .normal)
+        
+        let coordinatorView = CoordinatorView(coordinator: coordinator) {
+            coordinator.scene
+        }
+        
+        _ = coordinator.coordinate(to: presentedCoordinator, presentationStyle: .fullScreen)
+        XCTAssertTrue(coordinatorView.showFullScreen)
+        XCTAssertFalse(coordinatorView.showSheet)
+        XCTAssertFalse(coordinatorView.showCustomModal)
+    }
+    
+    // MARK: - Presentable
+    
+    func test_coordinator_presentable_exists() {
+        let coordinator: SwiftUICoordinator<Void> = .init(id: "1", mode: .normal)
+        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2", mode: .normal)
+        
+        XCTAssertNil(coordinator.presentable)
+        _ = coordinator.coordinate(to: presentedCoordinator, presentationStyle: .fullScreen)
+        XCTAssertNotNil(coordinator.presentable)
+    }
+    
+    // MARK: - NavigationRouter
+    
+    func test_coordinator_navigation_router_exists() {
+        let coordinator: SwiftUICoordinator<Void> = .init(id: "1", mode: .navigation)
+        XCTAssertNil(coordinator.navigationRouter)
+        let scene = coordinator.getRoot()
+        XCTAssertNotNil(coordinator.navigationRouter)
+    }
 }
 
 extension ModalPresentationStyle: Equatable {
