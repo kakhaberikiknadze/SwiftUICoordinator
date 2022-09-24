@@ -7,18 +7,18 @@
 
 import SwiftUI
 
-struct NavigationCoordinatorView: View, PresentationContext {
-    @Environment(\.isPresented) private var isPresented
-    @Environment(\.dismiss) private var dismissAction
+struct NavigationCoordinatorView<R: NavigationRouting>: View, PresentationContext {
+    @Environment(\.isPresented) var isPresented
+    @Environment(\.dismiss) var dismissAction
     
     var scene: AnyView { .init(self) }
     var presentationStyle: ModalPresentationStyle
     private let cancelAction: () -> Void
     
-    @ObservedObject private var router: NavigationRouter
+    @ObservedObject private var router: R
     
     init(
-        router: NavigationRouter,
+        router: R,
         presentationStyle: ModalPresentationStyle,
         onCancel: @escaping () -> Void
     ) {
@@ -28,13 +28,13 @@ struct NavigationCoordinatorView: View, PresentationContext {
     }
     
     var body: some View {
-        NavigationStack(path: $router.presentedScenes) {
-            router.rootSceneProvider.scene
+        NavigationStack(path: $router.pushedScenes) {
+            router.rootScene
                 .navigationDestination(for: AnyNavigationScene.self) { context in
                     context.scene
                 }
         }
-        .onChange(of: router.presentedScenes.count) { newValue in
+        .onChange(of: router.pushedScenes.count) { newValue in
             print("Presented scenes count", newValue)
         }
         .onChange(of: isPresented) { newValue in

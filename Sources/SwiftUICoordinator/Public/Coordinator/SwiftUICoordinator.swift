@@ -86,7 +86,7 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
             }
         case .navigation:
             return NavigationCoordinatorView(
-                router: .init(
+                router: NavigationRouter(
                     id: "NAVIGATION_ROUTER_" + id,
                     rootSceneProvider: asNavigationScene()
                 ),
@@ -207,10 +207,4 @@ extension SwiftUICoordinator: NavigationRouterChildable {
     func setNavigationRouter<R: NavigationPushing>(_ router: R) {
         navigationRouter = router
     }
-}
-
-// MARK: - NavigationPushing
-
-public protocol NavigationPushing: AnyObject {
-    func push<T>(_ coordinator: SwiftUICoordinator<T>) -> AnyPublisher<T, Never>
 }

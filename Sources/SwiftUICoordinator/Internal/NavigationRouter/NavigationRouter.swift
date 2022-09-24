@@ -8,14 +8,15 @@
 import SwiftUI
 import Combine
 
-final class NavigationRouter: ObservableObject {
+final class NavigationRouter: ObservableObject, NavigationRouting {
     // MARK: - Properties
     
     private var cancellables = Set<AnyCancellable>()
     public let id: String
     
-    @Published var presentedScenes: NavigationPath
+    @Published var pushedScenes: NavigationPath
     let rootSceneProvider: any SceneProviding
+    var rootScene: AnyView { rootSceneProvider.scene }
     
     // MARK: - Init
     
@@ -27,7 +28,7 @@ final class NavigationRouter: ObservableObject {
         print("|\n--NavigationRouter", id, "Initialised!")
         self.id = id
         self.rootSceneProvider = rootSceneProvider
-        presentedScenes = .init(pushedSceneProviders)
+        pushedScenes = .init(pushedSceneProviders)
         
         rootSceneProvider.setNavigationRouter(self)
         pushedSceneProviders.forEach { $0.setNavigationRouter(self) }
@@ -40,16 +41,16 @@ final class NavigationRouter: ObservableObject {
     // MARK: - Methods
     
     func push<S: NavigationScene>(_ sceneProvider: S) {
-        presentedScenes.append(sceneProvider)
+        pushedScenes.append(sceneProvider)
         sceneProvider.setNavigationRouter(self)
     }
     
     func pop() {
-        presentedScenes.removeLast()
+        pushedScenes.removeLast()
     }
     
     func popToRoot() {
-        presentedScenes.removeLast(presentedScenes.count)
+        pushedScenes.removeLast(pushedScenes.count)
     }
 }
 
@@ -62,7 +63,7 @@ extension NavigationRouter: NavigationPushing {
             .merge(with: coordinator.onCancel)
             .first()
             .sink { [weak self, unowned adapter] in
-                print("Finished", adapter.id, "Count:", self!.presentedScenes.count)
+                print("Finished", adapter.id, "Count:", self!.pushedScenes.count)
                 adapter.presentable.dismiss()
                 self?.pop()
             }
