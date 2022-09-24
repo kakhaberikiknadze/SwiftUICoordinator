@@ -98,6 +98,7 @@ final class SwiftUICoordinatorTests: XCTestCase {
         let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2", mode: .normal)
         let expectedResult = "Result"
         let scene = coordinator.getRoot()
+        _ = scene // Silence compiler warning about "never read"
         
         let expectation = self.expectation(description: "coordination finish")
         XCTAssertNotNil(coordinator.navigationRouter)
@@ -207,7 +208,21 @@ final class SwiftUICoordinatorTests: XCTestCase {
         let coordinator: SwiftUICoordinator<Void> = .init(id: "1", mode: .navigation)
         XCTAssertNil(coordinator.navigationRouter)
         let scene = coordinator.getRoot()
+        _ = scene // Silence compiler warning about "never read"
         XCTAssertNotNil(coordinator.navigationRouter)
+    }
+    
+    // MARK: - Deallocation
+    
+    func test_swiftUICoordinator_deallocation() {
+        var coordinator: SwiftUICoordinator<Void>! = .init(id: "1", mode: .normal)
+        var coordinatorView: AnyView! = coordinator.getRoot()
+        _ = coordinatorView // Silence compiler warning about "never read"
+        weak var weakCoordinator = coordinator
+        
+        coordinatorView = nil
+        coordinator = nil
+        XCTAssertNil(weakCoordinator)
     }
 }
 

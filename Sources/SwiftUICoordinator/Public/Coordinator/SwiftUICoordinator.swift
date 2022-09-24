@@ -81,7 +81,7 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
         print("===\n\nStarting coordinator", id , "is in navigation", mode == .navigation)
         switch mode {
         case .normal:
-            return CoordinatorView(coordinator: self) { [unowned self] in
+            return CoordinatorView(coordinator: self) {
                 self.scene
             }
         case .navigation:
