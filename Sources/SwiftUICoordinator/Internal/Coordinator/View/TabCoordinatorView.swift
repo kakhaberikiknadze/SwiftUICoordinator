@@ -30,6 +30,7 @@ struct TabCoordinatorView<C: TabCoordinating>: View, PresentationContext {
                         }
                     }
                     .tag(tab.id)
+                    .badge(tab.tabItem.badgeCount)
             }
         }
         .onChange(of: coordinator.selection, perform: { newValue in
