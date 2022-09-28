@@ -206,6 +206,7 @@ final class SwiftUICoordinatorTests: XCTestCase {
     
     func test_coordinator_navigation_router_exists() {
         let coordinator: SwiftUICoordinator<Void> = .init(id: "1", mode: .navigation)
+        // FIXME: - navigation router should be initialised immediately and before calling getRoot()
         XCTAssertNil(coordinator.navigationRouter)
         let scene = coordinator.getRoot()
         _ = scene // Silence compiler warning about "never read"
