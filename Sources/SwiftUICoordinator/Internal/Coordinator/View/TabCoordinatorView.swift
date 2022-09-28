@@ -14,8 +14,6 @@ struct TabCoordinatorView<C: TabCoordinating>: View, PresentationContext {
     public var presentationStyle: ModalPresentationStyle { coordinator.presentationStyle }
     var scene: AnyView { .init(self) }
     
-    @State private var selection = 0
-    
     init(coordinator: C) {
         self.coordinator = coordinator
     }
