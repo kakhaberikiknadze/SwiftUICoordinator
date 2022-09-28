@@ -235,6 +235,27 @@ final class SwiftUICoordinatorTests: XCTestCase {
         XCTAssertNotNil(weakCoordinatorTwo)
     }
     
+    func test_tab_coordinator_coordinators_property_injection_retained() {
+        var coordinatorOne: SwiftUICoordinator<Void>! = .init(id: "1", mode: .navigation)
+        var coordinatorTwo: SwiftUICoordinator<Void>! = .init(id: "2", mode: .normal)
+        
+        weak var weakCoordinatorOne = coordinatorOne
+        weak var weakCoordinatorTwo = coordinatorTwo
+        
+        let coordinator: TabSwiftUICoordinator<Void> = .init(
+            id: "TAB_COORDINATOR",
+            mode: .normal
+        )
+        coordinator.setTabs([coordinatorOne, coordinatorTwo])
+        
+        coordinatorOne = nil
+        coordinatorTwo = nil
+        
+        XCTAssertNotNil(coordinator)
+        XCTAssertNotNil(weakCoordinatorOne)
+        XCTAssertNotNil(weakCoordinatorTwo)
+    }
+    
     // MARK: - Deallocation
     
     func test_swiftUICoordinator_deallocation() {
