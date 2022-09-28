@@ -23,7 +23,15 @@ struct TabCoordinatorView<C: TabCoordinating>: View, PresentationContext {
     var body: some View {
         TabView(selection: $coordinator.selection) {
             ForEach(coordinator.tabs, id: \.id) { tab in
-                tab.tabScene
+                tab.scene
+                    .tabItem {
+                        Label {
+                            Text(tab.tabItem.title)
+                        } icon: {
+                            getIcon(using: tab.tabItem.image)
+                        }
+                    }
+                    .tag(tab.id)
             }
         }
         .onChange(of: coordinator.selection, perform: { newValue in
@@ -33,6 +41,17 @@ struct TabCoordinatorView<C: TabCoordinating>: View, PresentationContext {
             if !newValue {
                 cancel()
             }
+        }
+    }
+    
+    @ViewBuilder private func getIcon(
+        using imageSource: ImageSource
+    ) -> some View {
+        switch imageSource {
+        case let .local(localImage):
+            Image(with: localImage)
+        case let .remote(url):
+            AsyncImage(url: url)
         }
     }
     

@@ -9,15 +9,15 @@ import SwiftUI
 
 open class TabSwiftUICoordinator<CoordinationResult>: SwiftUICoordinator<CoordinationResult> {
     @Published var selection: String
-    public var tabs: [any TabSceneProviding]
+    public private(set) var tabs: [any TabSceneProviding]
     
     public init(
         id: String,
         mode: CoordinatorMode,
-        tabs: [any TabSceneProviding] = []
+        tabs: [SwiftUICoordinator<Void>] = []
     ) {
         self.selection = tabs.first?.id ?? ""
-        self.tabs = tabs
+        self.tabs = tabs.map(SwiftUICoordinatorTabSceneAdapter.init)
         super.init(id: id, mode: mode)
     }
     
@@ -30,7 +30,24 @@ open class TabSwiftUICoordinator<CoordinationResult>: SwiftUICoordinator<Coordin
             selection = newSelection
         }
     }
+    
+    public func setTabs(_ tabs: [SwiftUICoordinator<Void>]) {
+        self.tabs = tabs.map(SwiftUICoordinatorTabSceneAdapter.init)
+    }
 }
 
 extension TabSwiftUICoordinator: TabCoordinating {}
 
+private final class SwiftUICoordinatorTabSceneAdapter<T>: TabSceneProviding {
+    let id: String
+    private let _scene: AnyView
+    /// A scene ready to be presented inside `TabView`
+    public var scene: AnyView { _scene }
+    let tabItem: TabItem
+    
+    init(coordinator: SwiftUICoordinator<T>) {
+        id = coordinator.id
+        _scene = coordinator.start().scene
+        tabItem = coordinator.tabItem
+    }
+}

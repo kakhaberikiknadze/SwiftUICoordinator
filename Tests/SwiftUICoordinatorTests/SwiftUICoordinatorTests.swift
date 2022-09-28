@@ -212,17 +212,64 @@ final class SwiftUICoordinatorTests: XCTestCase {
         XCTAssertNotNil(coordinator.navigationRouter)
     }
     
+    // MARK: - Tab view
+    
+    func test_tab_coordinator_coordinators_retained() {
+        var coordinatorOne: SwiftUICoordinator<Void>! = .init(id: "1", mode: .navigation)
+        var coordinatorTwo: SwiftUICoordinator<Void>! = .init(id: "2", mode: .normal)
+        
+        weak var weakCoordinatorOne = coordinatorOne
+        weak var weakCoordinatorTwo = coordinatorTwo
+        
+        let coordinator: TabSwiftUICoordinator<Void> = .init(
+            id: "TAB_COORDINATOR",
+            mode: .normal,
+            tabs: [coordinatorOne, coordinatorTwo]
+        )
+        
+        coordinatorOne = nil
+        coordinatorTwo = nil
+        
+        XCTAssertNotNil(coordinator)
+        XCTAssertNotNil(weakCoordinatorOne)
+        XCTAssertNotNil(weakCoordinatorTwo)
+    }
+    
     // MARK: - Deallocation
     
     func test_swiftUICoordinator_deallocation() {
         var coordinator: SwiftUICoordinator<Void>! = .init(id: "1", mode: .normal)
         var coordinatorView: AnyView! = coordinator.getRoot()
-        _ = coordinatorView // Silence compiler warning about "never read"
         weak var weakCoordinator = coordinator
         
+        XCTAssertNotNil(coordinatorView)
         coordinatorView = nil
         coordinator = nil
         XCTAssertNil(weakCoordinator)
+    }
+    
+    func test_tab_coordinator_deallocation() {
+        var coordinatorOne: SwiftUICoordinator<Void>! = .init(id: "1", mode: .navigation)
+        var coordinatorTwo: SwiftUICoordinator<Void>! = .init(id: "2", mode: .normal)
+        
+        weak var weakCoordinatorOne = coordinatorOne
+        weak var weakCoordinatorTwo = coordinatorTwo
+        
+        var coordinator: TabSwiftUICoordinator<Void>! = .init(
+            id: "TAB_COORDINATOR",
+            mode: .normal,
+            tabs: [coordinatorOne, coordinatorTwo]
+        )
+        
+        weak var weakCoordinator = coordinator
+        
+        coordinator = nil
+        coordinatorOne = nil
+        coordinatorTwo = nil
+        
+        XCTAssertNil(weakCoordinator)
+        XCTAssertNil(weakCoordinatorOne)
+        XCTAssertNil(weakCoordinatorTwo)
     }
 }
 

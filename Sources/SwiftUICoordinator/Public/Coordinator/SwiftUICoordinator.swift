@@ -34,7 +34,7 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
     @Published private(set) var presentable: PresentationContext?
     
     /// Tab Item for `TabView`.
-    @Published public var tabItem: AnyView = EmptyView().erased()
+    @Published public var tabItem: TabItem = .empty
     
     /// Presentation style of the `scene`to determine wether to wrap it inside navigation or not.
     public fileprivate(set) var presentationStyle: ModalPresentationStyle = .fullScreen
@@ -77,7 +77,7 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
     
     /// Root presentation context  providing a scene wrapped inside either `CoordinatorView` or `NavigationCoordinatorView`
     /// as well as cancelation and dismiss actions.
-    private func start() -> PresentationContext {
+    func start() -> PresentationContext {
         print("===\n\nStarting coordinator", id , "is in navigation", mode == .navigation)
         switch mode {
         case .normal:
@@ -174,18 +174,6 @@ public extension SwiftUICoordinator where CoordinationResult == Void {
     /// Call this to finish coordination with a `Void` result.
     func finish() {
         finish(result: ())
-    }
-}
-
-// MARK: - TabSceneProviding
-
-extension SwiftUICoordinator: TabSceneProviding {
-    /// A scene ready to be presented inside `TabView`
-    public var tabScene: AnyView {
-        start().scene
-            .tabItem { tabItem }
-            .tag(id)
-            .erased()
     }
 }
 

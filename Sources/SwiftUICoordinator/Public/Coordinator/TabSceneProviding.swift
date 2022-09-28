@@ -9,5 +9,6 @@ import SwiftUI
 
 public protocol TabSceneProviding {
     var id: String { get }
-    var tabScene: AnyView { get }
+    var scene: AnyView { get }
+    var tabItem: TabItem { get }
 }
