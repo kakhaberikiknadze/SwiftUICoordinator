@@ -9,7 +9,7 @@ import SwiftUI
 
 open class TabSwiftUICoordinator<CoordinationResult>: SwiftUICoordinator<CoordinationResult> {
     @Published var selection: String
-    public private(set) var tabs: [any TabSceneProviding]
+    private(set) var tabs: [any TabSceneProviding]
     
     public init(
         id: String,

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-protocol SceneProviding: AnyObject, Hashable {
+protocol SceneProviding: AnyObject {
     var id: String { get }
     var scene: AnyView { get }
 }
