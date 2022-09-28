@@ -61,7 +61,7 @@ extension NavigationRouter: NavigationPushing {
         coordinator.onFinish
             .map { _ in }
             .merge(with: coordinator.onCancel)
-            .first()
+            .first() // FIXME: - first() is good but it shouldn't really be triggered twice anyway
             .sink { [weak self, unowned adapter] in
                 print("Finished", adapter.id, "Count:", self!.pushedScenes.count)
                 adapter.presentable.dismiss()
