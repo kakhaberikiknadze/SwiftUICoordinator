@@ -13,16 +13,19 @@ open class TabSwiftUICoordinator<CoordinationResult>: SwiftUICoordinator<Coordin
     
     public init(
         id: String,
-        mode: CoordinatorMode,
         tabs: [SwiftUICoordinator<Void>] = []
     ) {
         self.selection = tabs.first?.id ?? ""
         self.tabs = tabs.map(SwiftUICoordinatorTabSceneAdapter.init)
-        super.init(id: id, mode: mode)
+        super.init(id: id)
+    }
+    
+    deinit {
+        print(String(describing: Self.self), id, "Deinitialised!")
     }
     
     open override func createScene() -> AnyView {
-        TabCoordinatorView(coordinator: self).erased()
+        TabCoordinatorView(coordinator: self).erased() // FIXME - Retain cycle
     }
     
     public func selectTab(withId id: String) {

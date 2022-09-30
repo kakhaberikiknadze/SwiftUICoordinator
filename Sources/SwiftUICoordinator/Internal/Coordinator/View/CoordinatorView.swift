@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct CoordinatorView<C: Coordinating, Content: View>: View, PresentationContext {
-    @Environment(\.isPresented) private var isPresented
     @Environment(\.dismiss) private var dismissAction
     @ObservedObject private var coordinator: C
     
@@ -69,11 +68,6 @@ struct CoordinatorView<C: Coordinating, Content: View>: View, PresentationContex
                         .customTransition()
                 }
             )
-            .onChange(of: isPresented) { newValue in
-                if !newValue {
-                    cancel()
-                }
-            }
     }
 
     func cancel() {

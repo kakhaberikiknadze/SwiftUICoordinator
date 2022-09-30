@@ -11,35 +11,40 @@ final class SwiftUICoordinatorTests: XCTestCase {
         cancellables = []
     }
     
+    override func tearDown() {
+        super.tearDown()
+        cancellables = nil
+    }
+    
     // MARK: - Presentation style
     
     func test_coordination_sheet_presentation() {
-        let coordinator: SwiftUICoordinator<Void> = .init(id: "1", mode: .normal)
-        let presentedCoordinator: SwiftUICoordinator<Void> = .init(id: "2", mode: .normal)
+        let coordinator: SwiftUICoordinator<Void> = .init(id: "1")
+        let presentedCoordinator: SwiftUICoordinator<Void> = .init(id: "2")
 
         _ = coordinator.coordinate(to: presentedCoordinator, presentationStyle: .sheet)
         XCTAssertEqual(presentedCoordinator.presentationStyle, .sheet)
     }
     
     func test_coordination_fullScreen_presentation() {
-        let coordinator: SwiftUICoordinator<Void> = .init(id: "1", mode: .normal)
-        let presentedCoordinator: SwiftUICoordinator<Void> = .init(id: "2", mode: .normal)
+        let coordinator: SwiftUICoordinator<Void> = .init(id: "1")
+        let presentedCoordinator: SwiftUICoordinator<Void> = .init(id: "2")
 
         _ = coordinator.coordinate(to: presentedCoordinator, presentationStyle: .fullScreen)
         XCTAssertEqual(presentedCoordinator.presentationStyle, .fullScreen)
     }
     
     func test_coordination_custom_presentation() {
-        let coordinator: SwiftUICoordinator<Void> = .init(id: "1", mode: .normal)
-        let presentedCoordinator: SwiftUICoordinator<Void> = .init(id: "2", mode: .normal)
+        let coordinator: SwiftUICoordinator<Void> = .init(id: "1")
+        let presentedCoordinator: SwiftUICoordinator<Void> = .init(id: "2")
 
         _ = coordinator.coordinate(to: presentedCoordinator, presentationStyle: .custom(.slide))
         XCTAssertEqual(presentedCoordinator.presentationStyle, .custom(.scale))
     }
     
     func test_coordination_sheet_finish() {
-        let coordinator: SwiftUICoordinator<Void> = .init(id: "1", mode: .normal)
-        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2", mode: .normal)
+        let coordinator: SwiftUICoordinator<Void> = .init(id: "1")
+        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2")
         let expectedResult = "Result"
 
         let expectation = self.expectation(description: "coordination finish")
@@ -58,8 +63,8 @@ final class SwiftUICoordinatorTests: XCTestCase {
     // MARK: - Finish
     
     func test_coordination_fullScreen_finish() {
-        let coordinator: SwiftUICoordinator<Void> = .init(id: "1", mode: .normal)
-        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2", mode: .normal)
+        let coordinator: SwiftUICoordinator<Void> = .init(id: "1")
+        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2")
         let expectedResult = "Result"
 
         let expectation = self.expectation(description: "coordination finish")
@@ -76,8 +81,8 @@ final class SwiftUICoordinatorTests: XCTestCase {
     }
     
     func test_coordination_custom_finish() {
-        let coordinator: SwiftUICoordinator<Void> = .init(id: "1", mode: .normal)
-        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2", mode: .normal)
+        let coordinator: SwiftUICoordinator<Void> = .init(id: "1")
+        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2")
         let expectedResult = "Result"
 
         let expectation = self.expectation(description: "coordination finish")
@@ -94,28 +99,31 @@ final class SwiftUICoordinatorTests: XCTestCase {
     }
     
     func test_coordination_navigation_finish() {
-        let coordinator: SwiftUICoordinator<Void> = .init(id: "1", mode: .navigation)
-        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2", mode: .normal)
+        let coordinator: NavigationSwiftUICoordinator<Void> = .init(id: "1")
+        var presentedCoordinator: SwiftUICoordinator<String>! = .init(id: "2")
+        weak var weakPresentedCoordinator = presentedCoordinator
         let expectedResult = "Result"
-        let scene = coordinator.getRoot()
-        _ = scene // Silence compiler warning about "never read"
         
         let expectation = self.expectation(description: "coordination finish")
-        XCTAssertNotNil(coordinator.navigationRouter)
-        coordinator.navigationRouter!.push(presentedCoordinator)
+        XCTAssertNil(presentedCoordinator.navigationRouter)
+        coordinator.push(presentedCoordinator)
             .sink(receiveCompletion: { completion in
                 expectation.fulfill()
             }, receiveValue: { result in
                 
             })
             .store(in: &cancellables)
+        XCTAssertNotNil(presentedCoordinator.navigationRouter)
 
         presentedCoordinator.finish(result: expectedResult)
         waitForExpectations(timeout: 0.1)
+        
+        presentedCoordinator = nil
+        XCTAssertNil(weakPresentedCoordinator)
     }
     
     func test_coordinator_finish() {
-        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "1", mode: .normal)
+        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "1")
         let expectation = self.expectation(description: "coordinator finish")
         let expectedResult = "Result"
         
@@ -134,13 +142,15 @@ final class SwiftUICoordinatorTests: XCTestCase {
     // MARK: - Cancel
     
     func test_coordinator_cancel() {
-        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "1", mode: .normal)
+        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "1")
         let expectation = self.expectation(description: "coordinator cancel")
         
-        presentedCoordinator.onCancel
+        presentedCoordinator.onFinish
             .sink { completion in
                 expectation.fulfill()
-            } receiveValue: { _ in }
+            } receiveValue: { _ in
+                XCTFail("Shouldn't have received a value when cancelled")
+            }
             .store(in: &cancellables)
 
         presentedCoordinator.cancel()
@@ -150,8 +160,8 @@ final class SwiftUICoordinatorTests: XCTestCase {
     // MARK: - CoordinatorView modal presentation
     
     func test_coordinator_view_show_custom_modal() {
-        let coordinator: SwiftUICoordinator<Void> = .init(id: "1", mode: .normal)
-        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2", mode: .normal)
+        let coordinator: SwiftUICoordinator<Void> = .init(id: "1")
+        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2")
         
         let coordinatorView = CoordinatorView(coordinator: coordinator) {
             coordinator.scene
@@ -164,8 +174,8 @@ final class SwiftUICoordinatorTests: XCTestCase {
     }
     
     func test_coordinator_view_show_sheet() {
-        let coordinator: SwiftUICoordinator<Void> = .init(id: "1", mode: .normal)
-        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2", mode: .normal)
+        let coordinator: SwiftUICoordinator<Void> = .init(id: "1")
+        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2")
         
         let coordinatorView = CoordinatorView(coordinator: coordinator) {
             coordinator.scene
@@ -178,8 +188,8 @@ final class SwiftUICoordinatorTests: XCTestCase {
     }
     
     func test_coordinator_view_show_fullScreen() {
-        let coordinator: SwiftUICoordinator<Void> = .init(id: "1", mode: .normal)
-        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2", mode: .normal)
+        let coordinator: SwiftUICoordinator<Void> = .init(id: "1")
+        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2")
         
         let coordinatorView = CoordinatorView(coordinator: coordinator) {
             coordinator.scene
@@ -194,33 +204,112 @@ final class SwiftUICoordinatorTests: XCTestCase {
     // MARK: - Presentable
     
     func test_coordinator_presentable_exists() {
-        let coordinator: SwiftUICoordinator<Void> = .init(id: "1", mode: .normal)
-        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2", mode: .normal)
+        let coordinator: SwiftUICoordinator<Void> = .init(id: "1")
+        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2")
         
         XCTAssertNil(coordinator.presentable)
         _ = coordinator.coordinate(to: presentedCoordinator, presentationStyle: .fullScreen)
         XCTAssertNotNil(coordinator.presentable)
     }
     
-    // MARK: - NavigationRouter
+    // MARK: - Navigation
     
     func test_coordinator_navigation_router_exists() {
-        let coordinator: SwiftUICoordinator<Void> = .init(id: "1", mode: .navigation)
+        let navigationCoordinator = NavigationSwiftUICoordinator<Void>(id: "nav")
+        let coordinator: SwiftUICoordinator<Void> = .init(id: "1")
+        XCTAssertNil(coordinator.navigationRouter)
+        _ = navigationCoordinator.push(coordinator)
         XCTAssertNotNil(coordinator.navigationRouter)
+    }
+    
+    func test_navigation_lifecycle() throws {
+        let navigationCoordinator = NavigationSwiftUICoordinator<Void>(id: "nav")
+        let coordinatorOne: SwiftUICoordinator<String>! = .init(id: "1")
+        var coordinatorTwo: SwiftUICoordinator<String>! = .init(id: "2")
+        let expectedResult = "Result"
+        
+        weak var weakCoordinatorOne = coordinatorOne
+        weak var weakCoordinatorTwo = coordinatorTwo
+        
+        XCTAssertNil(coordinatorOne.navigationRouter)
+        XCTAssertEqual(navigationCoordinator.navigationPath.count, 0)
+        
+        _ = navigationCoordinator.push(coordinatorOne)
+        
+        XCTAssertEqual(navigationCoordinator.navigationPath.count, 1)
+        
+        let router = try XCTUnwrap(coordinatorOne.navigationRouter)
+        
+        let expectation = self.expectation(description: "coordinator two finish")
+        router.push(coordinatorTwo)
+            .sink { completion in
+                expectation.fulfill()
+            } receiveValue: { result in
+                XCTAssertEqual(result, expectedResult)
+            }
+            .store(in: &cancellables)
+        
+        XCTAssertEqual(navigationCoordinator.navigationPath.count, 2)
+        
+        coordinatorTwo.finish(result: expectedResult)
+        waitForExpectations(timeout: 0.2)
+        
+        coordinatorTwo = nil
+        XCTAssertNil(weakCoordinatorTwo)
+        XCTAssertNotNil(weakCoordinatorOne)
+        XCTAssertEqual(navigationCoordinator.navigationPath.count, 1)
+    }
+    
+    func test_navigation_path_change() throws {
+        let navigationCoordinator = NavigationSwiftUICoordinator<Void>(id: "nav")
+        let coordinatorOne: SwiftUICoordinator<String>! = .init(id: "1")
+        var coordinatorTwo: SwiftUICoordinator<String>! = .init(id: "2")
+        
+        let expectedResult = "Result"
+        
+        weak var weakCoordinatorOne = coordinatorOne
+        weak var weakCoordinatorTwo = coordinatorTwo
+        
+        XCTAssertNil(coordinatorOne.navigationRouter)
+        XCTAssertEqual(navigationCoordinator.navigationPath.count, 0)
+        
+        _ = navigationCoordinator.push(coordinatorOne)
+        
+        XCTAssertEqual(navigationCoordinator.navigationPath.count, 1)
+        
+        let router = try XCTUnwrap(coordinatorOne.navigationRouter)
+        
+        let expectation = self.expectation(description: "coordinator two finish")
+        router.push(coordinatorTwo)
+            .sink { completion in
+                expectation.fulfill()
+            } receiveValue: { result in
+                XCTAssertEqual(result, expectedResult)
+            }
+            .store(in: &cancellables)
+        
+        XCTAssertEqual(navigationCoordinator.navigationPath.count, 2)
+        
+        coordinatorTwo.finish(result: expectedResult)
+        waitForExpectations(timeout: 0.2)
+        
+        coordinatorTwo = nil
+        XCTAssertNil(weakCoordinatorTwo)
+        XCTAssertNotNil(weakCoordinatorOne)
+        XCTAssertEqual(navigationCoordinator.navigationPath.count, 1)
     }
     
     // MARK: - Tab view
     
     func test_tab_coordinator_coordinators_retained() {
-        var coordinatorOne: SwiftUICoordinator<Void>! = .init(id: "1", mode: .navigation)
-        var coordinatorTwo: SwiftUICoordinator<Void>! = .init(id: "2", mode: .normal)
+        var coordinatorOne: SwiftUICoordinator<Void>! = .init(id: "1")
+        var coordinatorTwo: SwiftUICoordinator<Void>! = .init(id: "2")
         
         weak var weakCoordinatorOne = coordinatorOne
         weak var weakCoordinatorTwo = coordinatorTwo
         
         let coordinator: TabSwiftUICoordinator<Void> = .init(
             id: "TAB_COORDINATOR",
-            mode: .normal,
             tabs: [coordinatorOne, coordinatorTwo]
         )
         
@@ -233,15 +322,14 @@ final class SwiftUICoordinatorTests: XCTestCase {
     }
     
     func test_tab_coordinator_coordinators_property_injection_retained() {
-        var coordinatorOne: SwiftUICoordinator<Void>! = .init(id: "1", mode: .navigation)
-        var coordinatorTwo: SwiftUICoordinator<Void>! = .init(id: "2", mode: .normal)
+        var coordinatorOne: SwiftUICoordinator<Void>! = .init(id: "1")
+        var coordinatorTwo: SwiftUICoordinator<Void>! = .init(id: "2")
         
         weak var weakCoordinatorOne = coordinatorOne
         weak var weakCoordinatorTwo = coordinatorTwo
         
         let coordinator: TabSwiftUICoordinator<Void> = .init(
-            id: "TAB_COORDINATOR",
-            mode: .normal
+            id: "TAB_COORDINATOR"
         )
         coordinator.setTabs([coordinatorOne, coordinatorTwo])
         
@@ -256,7 +344,7 @@ final class SwiftUICoordinatorTests: XCTestCase {
     // MARK: - Deallocation
     
     func test_swiftUICoordinator_deallocation() {
-        var coordinator: SwiftUICoordinator<Void>! = .init(id: "1", mode: .normal)
+        var coordinator: SwiftUICoordinator<Void>! = .init(id: "1")
         var coordinatorView: AnyView! = coordinator.getRoot()
         weak var weakCoordinator = coordinator
         
@@ -267,15 +355,14 @@ final class SwiftUICoordinatorTests: XCTestCase {
     }
     
     func test_tab_coordinator_deallocation() {
-        var coordinatorOne: SwiftUICoordinator<Void>! = .init(id: "1", mode: .navigation)
-        var coordinatorTwo: SwiftUICoordinator<Void>! = .init(id: "2", mode: .normal)
+        var coordinatorOne: SwiftUICoordinator<Void>! = .init(id: "1")
+        var coordinatorTwo: SwiftUICoordinator<Void>! = .init(id: "2")
         
         weak var weakCoordinatorOne = coordinatorOne
         weak var weakCoordinatorTwo = coordinatorTwo
         
         var coordinator: TabSwiftUICoordinator<Void>! = .init(
             id: "TAB_COORDINATOR",
-            mode: .normal,
             tabs: [coordinatorOne, coordinatorTwo]
         )
         

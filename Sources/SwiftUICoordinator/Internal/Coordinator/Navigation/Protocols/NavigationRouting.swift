@@ -8,6 +8,6 @@
 import SwiftUI
 
 protocol NavigationRouting: ObservableObject {
-    var rootScene: AnyView { get }
-    var pushedScenes: NavigationPath { get set }
+    var navigationPath: NavigationPath { get set }
+    func scene(for id: String) -> AnyView?
 }

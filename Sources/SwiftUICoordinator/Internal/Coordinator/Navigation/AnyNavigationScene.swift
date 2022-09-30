@@ -7,41 +7,40 @@
 
 import SwiftUI
 
-typealias NavigationScene = SceneProviding & NavigationRouterChildable & Hashable
+typealias NavigationScene = SceneProviding & CancellableScene
 
 final class AnyNavigationScene: NavigationScene {
+    // MARK: - Properties
+    
     let presentable: PresentationContext
     let id: String
     var scene: AnyView { presentable.scene }
+    let cancelAction: () -> Void
     
-    private let navigationRouterChildable: NavigationRouterChildable
+    // MARK: - Init
     
     init(
         id: String,
         presentable: PresentationContext,
-        navigationRouterChildable: NavigationRouterChildable
+        cancel: @escaping () -> Void
     ) {
         self.id = id
         self.presentable = presentable
-        self.navigationRouterChildable = navigationRouterChildable
+        cancelAction = cancel
     }
     
     deinit {
         print(String(describing: Self.self), id, "Deinitialised!")
     }
     
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
+    // MARK: - CancellableScene
     
-    static func == (lhs: AnyNavigationScene, rhs: AnyNavigationScene) -> Bool {
-        lhs.id == rhs.id
-    }
-    
-    func setNavigationRouter<R>(_ router: R) where R: NavigationPushing {
-        navigationRouterChildable.setNavigationRouter(router)
+    func cancel() {
+        cancelAction()
     }
 }
+
+// MARK: - SwiftUICoordinator + AnyNavigationScene
 
 extension SwiftUICoordinator {
     func asNavigationScene() -> some AnyNavigationScene {
@@ -51,7 +50,7 @@ extension SwiftUICoordinator {
                 coordinator: self,
                 content: { [weak self] in self?.scene }
             ),
-            navigationRouterChildable: self
+            cancel: cancel
         )
     }
 }
