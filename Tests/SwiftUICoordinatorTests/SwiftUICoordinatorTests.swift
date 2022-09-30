@@ -20,35 +20,35 @@ final class SwiftUICoordinatorTests: XCTestCase {
     
     func test_coordination_sheet_presentation() {
         let coordinator: SwiftUICoordinator<Void> = .init(id: "1")
-        let presentedCoordinator: SwiftUICoordinator<Void> = .init(id: "2")
+        let presentedCoordinator: SwiftUICoordinator<Void> = .init(id: "2", presentationStyle: .sheet)
 
-        _ = coordinator.coordinate(to: presentedCoordinator, presentationStyle: .sheet)
+        _ = coordinator.coordinate(to: presentedCoordinator)
         XCTAssertEqual(presentedCoordinator.presentationStyle, .sheet)
     }
     
     func test_coordination_fullScreen_presentation() {
         let coordinator: SwiftUICoordinator<Void> = .init(id: "1")
-        let presentedCoordinator: SwiftUICoordinator<Void> = .init(id: "2")
+        let presentedCoordinator: SwiftUICoordinator<Void> = .init(id: "2", presentationStyle: .fullScreen)
 
-        _ = coordinator.coordinate(to: presentedCoordinator, presentationStyle: .fullScreen)
+        _ = coordinator.coordinate(to: presentedCoordinator)
         XCTAssertEqual(presentedCoordinator.presentationStyle, .fullScreen)
     }
     
     func test_coordination_custom_presentation() {
         let coordinator: SwiftUICoordinator<Void> = .init(id: "1")
-        let presentedCoordinator: SwiftUICoordinator<Void> = .init(id: "2")
+        let presentedCoordinator: SwiftUICoordinator<Void> = .init(id: "2", presentationStyle: .custom(.slide))
 
-        _ = coordinator.coordinate(to: presentedCoordinator, presentationStyle: .custom(.slide))
+        _ = coordinator.coordinate(to: presentedCoordinator)
         XCTAssertEqual(presentedCoordinator.presentationStyle, .custom(.scale))
     }
     
     func test_coordination_sheet_finish() {
         let coordinator: SwiftUICoordinator<Void> = .init(id: "1")
-        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2")
+        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2", presentationStyle: .sheet)
         let expectedResult = "Result"
 
         let expectation = self.expectation(description: "coordination finish")
-        coordinator.coordinate(to: presentedCoordinator, presentationStyle: .sheet)
+        coordinator.coordinate(to: presentedCoordinator)
             .sink(receiveCompletion: { completion in
                 expectation.fulfill()
             }, receiveValue: { result in
@@ -64,11 +64,11 @@ final class SwiftUICoordinatorTests: XCTestCase {
     
     func test_coordination_fullScreen_finish() {
         let coordinator: SwiftUICoordinator<Void> = .init(id: "1")
-        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2")
+        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2", presentationStyle: .fullScreen)
         let expectedResult = "Result"
 
         let expectation = self.expectation(description: "coordination finish")
-        coordinator.coordinate(to: presentedCoordinator, presentationStyle: .fullScreen)
+        coordinator.coordinate(to: presentedCoordinator)
             .sink(receiveCompletion: { completion in
                 expectation.fulfill()
             }, receiveValue: { result in
@@ -82,11 +82,11 @@ final class SwiftUICoordinatorTests: XCTestCase {
     
     func test_coordination_custom_finish() {
         let coordinator: SwiftUICoordinator<Void> = .init(id: "1")
-        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2")
+        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2", presentationStyle: .custom(.scale))
         let expectedResult = "Result"
 
         let expectation = self.expectation(description: "coordination finish")
-        coordinator.coordinate(to: presentedCoordinator, presentationStyle: .custom(.scale))
+        coordinator.coordinate(to: presentedCoordinator)
             .sink(receiveCompletion: { completion in
                 expectation.fulfill()
             }, receiveValue: { result in
@@ -161,13 +161,13 @@ final class SwiftUICoordinatorTests: XCTestCase {
     
     func test_coordinator_view_show_custom_modal() {
         let coordinator: SwiftUICoordinator<Void> = .init(id: "1")
-        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2")
+        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2", presentationStyle: .custom(.scale))
         
         let coordinatorView = CoordinatorView(coordinator: coordinator) {
             coordinator.scene
         }
         
-        _ = coordinator.coordinate(to: presentedCoordinator, presentationStyle: .custom(.scale))
+        _ = coordinator.coordinate(to: presentedCoordinator)
         XCTAssertTrue(coordinatorView.showCustomModal)
         XCTAssertFalse(coordinatorView.showSheet)
         XCTAssertFalse(coordinatorView.showFullScreen)
@@ -175,13 +175,13 @@ final class SwiftUICoordinatorTests: XCTestCase {
     
     func test_coordinator_view_show_sheet() {
         let coordinator: SwiftUICoordinator<Void> = .init(id: "1")
-        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2")
+        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2", presentationStyle: .sheet)
         
         let coordinatorView = CoordinatorView(coordinator: coordinator) {
             coordinator.scene
         }
         
-        _ = coordinator.coordinate(to: presentedCoordinator, presentationStyle: .sheet)
+        _ = coordinator.coordinate(to: presentedCoordinator)
         XCTAssertTrue(coordinatorView.showSheet)
         XCTAssertFalse(coordinatorView.showFullScreen)
         XCTAssertFalse(coordinatorView.showCustomModal)
@@ -189,13 +189,13 @@ final class SwiftUICoordinatorTests: XCTestCase {
     
     func test_coordinator_view_show_fullScreen() {
         let coordinator: SwiftUICoordinator<Void> = .init(id: "1")
-        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2")
+        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2", presentationStyle: .fullScreen)
         
         let coordinatorView = CoordinatorView(coordinator: coordinator) {
             coordinator.scene
         }
         
-        _ = coordinator.coordinate(to: presentedCoordinator, presentationStyle: .fullScreen)
+        _ = coordinator.coordinate(to: presentedCoordinator)
         XCTAssertTrue(coordinatorView.showFullScreen)
         XCTAssertFalse(coordinatorView.showSheet)
         XCTAssertFalse(coordinatorView.showCustomModal)
@@ -205,10 +205,10 @@ final class SwiftUICoordinatorTests: XCTestCase {
     
     func test_coordinator_presentable_exists() {
         let coordinator: SwiftUICoordinator<Void> = .init(id: "1")
-        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2")
+        let presentedCoordinator: SwiftUICoordinator<String> = .init(id: "2", presentationStyle: .fullScreen)
         
         XCTAssertNil(coordinator.presentable)
-        _ = coordinator.coordinate(to: presentedCoordinator, presentationStyle: .fullScreen)
+        _ = coordinator.coordinate(to: presentedCoordinator)
         XCTAssertNotNil(coordinator.presentable)
     }
     
