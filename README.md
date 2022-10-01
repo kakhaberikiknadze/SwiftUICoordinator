@@ -1,6 +1,7 @@
 # SwiftUICoordinator
 
 [![Swift Version][swift-image]][swift-url]
+[![License][license-image]][license-url]
 
 A Reusable Coordinator for pure *SwiftUI* project. No more need for using *UIKit* for coordinators to separate navigation logic from scenes. All you need to do is to create a subclass of a desired coordinator type (`SwiftUICoordinator`, `NavigationSwiftUICoordinator`, `TabSwiftUICoordinator`), provide a scene in a form of *SwiftUI's* `View` and coordinate to other coordinators.
 
@@ -135,5 +136,13 @@ struct MyApp: App {
 }
 ```
 
+## Meta
+
+Kakhaberi Kiknadze – [@Kakhi26](https://twitter.com/Kakhi26) - [swiftlyblogging.com](https://swiftlyblogging.com)
+
+Distributed under the MIT license. See [LICENSE](https://github.com/kakhaberikiknadze/SwiftUICoordinator/blob/main/Licence.md) for more information.
+
 [swift-image]:https://img.shields.io/badge/swift-5.7-orange.svg
 [swift-url]: https://swift.org/
+[license-image]: https://img.shields.io/badge/License-MIT-blue.svg
+[license-url]: https://github.com/kakhaberikiknadze/SwiftUICoordinator/blob/main/Licence.md
