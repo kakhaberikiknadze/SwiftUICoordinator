@@ -34,7 +34,7 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
     @Published public var tabItem: TabItem = .empty
     
     /// Presentation style of the `scene`to determine wether to wrap it inside navigation or not.
-    public let presentationStyle: ModalPresentationStyle
+    public fileprivate(set) var presentationStyle: ModalPresentationStyle = .fullScreen
     
     /// Triggered when coordination is finished and provides result of a specified type.
     public var onFinish: AnyPublisher<CoordinationResult, Never> { result.first().eraseToAnyPublisher() }
@@ -47,13 +47,9 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
     ///   - mode: Coordination mode. Either `.normal` or  `.navigation`.
     ///   If it's `.navigation` new `NavigationStack` will be created and the scene
     ///   will be wrapped inside it.
-    public init(
-        id: String = UUID().uuidString,
-        presentationStyle: ModalPresentationStyle = .fullScreen
-    ) {
+    public init(id: String = UUID().uuidString) {
         print(id, "Initialised!")
         self.id = id
-        self.presentationStyle = presentationStyle
     }
     
     deinit {
@@ -98,8 +94,10 @@ public extension SwiftUICoordinator {
     ///   - presentationStyle: Modal presentation style. E.g.,`.sheet`, `.fullScren`, `.custom`
     /// - Returns: A publisher containing a coordination result
     func coordinate<T>(
-        to coordinator: SwiftUICoordinator<T>
+        to coordinator: SwiftUICoordinator<T>,
+        presentationStyle: ModalPresentationStyle = .fullScreen
     ) -> AnyPublisher<T, Never> {
+        coordinator.presentationStyle = presentationStyle
         presentable = coordinator.start()
         handleDismiss(of: coordinator)
         print(id, "presented", coordinator.id)

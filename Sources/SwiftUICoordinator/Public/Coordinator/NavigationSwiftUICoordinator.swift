@@ -18,10 +18,7 @@ open class NavigationSwiftUICoordinator<CoordinationResult>: SwiftUICoordinator<
     
     // MARK: - Init
     
-    public override init(
-        id: String,
-        presentationStyle: ModalPresentationStyle = .fullScreen
-    ) {
+    public override init(id: String) {
         super.init(id: id)
         setupObservers()
     }
