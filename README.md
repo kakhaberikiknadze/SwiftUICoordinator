@@ -1,5 +1,7 @@
 # SwiftUICoordinator
 
+[![Swift Version][swift-image]][swift-url]
+
 A Reusable Coordinator for pure *SwiftUI* project. No more need for using *UIKit* for coordinators to separate navigation logic from scenes. All you need to do is to create a subclass of a desired coordinator type (`SwiftUICoordinator`, `NavigationSwiftUICoordinator`, `TabSwiftUICoordinator`), provide a scene in a form of *SwiftUI's* `View` and coordinate to other coordinators.
 
 # Requirements
@@ -132,3 +134,6 @@ struct MyApp: App {
     }
 }
 ```
+
+[swift-image]:https://img.shields.io/badge/swift-5.7-orange.svg
+[swift-url]: https://swift.org/
