@@ -20,12 +20,8 @@ open class TabSwiftUICoordinator<CoordinationResult>: SwiftUICoordinator<Coordin
         super.init(id: id)
     }
     
-    deinit {
-        print(String(describing: Self.self), id, "Deinitialised!")
-    }
-    
-    open override func createScene() -> AnyView {
-        TabCoordinatorView(coordinator: self).erased() // FIXME - Retain cycle
+    override func start() -> PresentationContext {
+        TabCoordinatorView(coordinator: self)
     }
     
     public func selectTab(withId id: String) {
