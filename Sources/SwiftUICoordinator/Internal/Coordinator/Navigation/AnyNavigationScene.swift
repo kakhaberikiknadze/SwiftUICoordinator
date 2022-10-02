@@ -43,13 +43,10 @@ final class AnyNavigationScene: NavigationScene {
 // MARK: - SwiftUICoordinator + AnyNavigationScene
 
 extension SwiftUICoordinator {
-    func asNavigationScene() -> some AnyNavigationScene {
-        .init(
+    func asNavigationScene() -> some NavigationScene {
+        AnyNavigationScene(
             id: id,
-            presentable: CoordinatorView(
-                coordinator: self,
-                content: { [weak self] in self?.scene }
-            ),
+            presentable: start(),
             cancel: cancel
         )
     }
