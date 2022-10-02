@@ -44,9 +44,6 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
     /// Instantiates a coordinator used for `SwiftUI.
     /// - Parameters:
     ///   - id: Unique identifier
-    ///   - mode: Coordination mode. Either `.normal` or  `.navigation`.
-    ///   If it's `.navigation` new `NavigationStack` will be created and the scene
-    ///   will be wrapped inside it.
     public init(id: String = UUID().uuidString) {
         print(id, "Initialised!")
         self.id = id
@@ -58,8 +55,7 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
     
     // MARK: - Methods
     
-    /// Root presentation context  providing a scene wrapped inside either `CoordinatorView` or `NavigationCoordinatorView`
-    /// as well as cancelation and dismiss actions.
+    /// Creates and returns a `PresentationContext`.
     func start() -> PresentationContext {
         CoordinatorView(coordinator: self) {
             self.scene
