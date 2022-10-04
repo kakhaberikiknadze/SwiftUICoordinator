@@ -37,7 +37,12 @@ struct NavigationCoordinatorView<R: NavigationRouting, Content: View>: View, Pre
                 }
         }
         .onChange(of: router.navigationPath.count) { newValue in
-            print("Presented scenes count", newValue)
+            Log.trace(
+                category: String(describing: Self.self),
+                message: "Navigation path updated",
+                metadata: [
+                    "Path items count": newValue
+                ])
         }
     }
     

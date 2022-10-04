@@ -24,7 +24,7 @@ open class NavigationSwiftUICoordinator<CoordinationResult>: SwiftUICoordinator<
     }
     
     deinit {
-        print(String(describing: Self.self), id, "Deinitialised!")
+        Log.deinitialization(category: String(describing: Self.self), metadata: ["id": id])
     }
     
     // MARK: - Methods

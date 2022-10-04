@@ -33,7 +33,7 @@ struct TabCoordinatorView<C: TabCoordinating>: View, PresentationContext {
             }
         }
         .onChange(of: coordinator.selection, perform: { newValue in
-            print("Selected tab with ID:", newValue)
+            Log.trace(category: String(describing: Self.self), message: "Selected tab", metadata: ["id": newValue])
         })
     }
     

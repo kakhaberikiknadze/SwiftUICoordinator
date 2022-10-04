@@ -45,12 +45,15 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
     /// - Parameters:
     ///   - id: Unique identifier
     public init(id: String = UUID().uuidString) {
-        print(id, "Initialised!")
         self.id = id
+        Log.initialization(category: String(describing: Self.self), metadata: ["id": id])
     }
     
     deinit {
-        print(String(describing: Self.self), id, "Deinitialised!")
+        Log.deinitialization(
+            category: String(describing: Self.self),
+            metadata: ["id": id]
+        )
     }
     
     // MARK: - Methods
@@ -76,6 +79,11 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
     /// and causes a crash.
     /// - Returns: A scene to be wrapped inside coordinator as a presented scene
     open func createScene() -> AnyView {
+        Log.critical(
+            category: String(describing: Self.self),
+            message: "createScene not overridden by the sublcass",
+            metadata: ["id": id]
+        )
         assertionFailure("createScene not overridden by the sublcass.", file: #file, line: #line)
         return EmptyView().erased()
     }
@@ -96,7 +104,14 @@ public extension SwiftUICoordinator {
         coordinator.presentationStyle = presentationStyle
         presentable = coordinator.start()
         handleDismiss(of: coordinator)
-        print(id, "presented", coordinator.id)
+        Log.trace(
+            category: String(describing: Self.self),
+            message: "Coordinator presented",
+            metadata: [
+                "Presenting coordinator id": id,
+                "Presented coordinator id": coordinator.id
+            ]
+        )
         return coordinator.onFinish.eraseToAnyPublisher()
     }
     
@@ -104,7 +119,14 @@ public extension SwiftUICoordinator {
         coordinator.onFinish
             .map { _ in }
             .sink(receiveCompletion: { [weak self, weak coordinator] _ in
-                print("Dismissed", coordinator?.id ?? "nil", "in", self?.id ?? "nil")
+                Log.trace(
+                    category: String(describing: Self.self),
+                    message: "Coordinator dismissed",
+                    metadata: [
+                        "Presenting coordinator id": self?.id as Any,
+                        "Dismissed coordinator id": coordinator?.id as Any
+                    ]
+                )
                 self?.presentable = nil
             }, receiveValue: { [weak self] in
                 self?.presentable?.dismiss()

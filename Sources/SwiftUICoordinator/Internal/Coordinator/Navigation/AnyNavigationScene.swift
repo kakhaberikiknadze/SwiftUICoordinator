@@ -30,7 +30,7 @@ final class AnyNavigationScene: NavigationScene {
     }
     
     deinit {
-        print(String(describing: Self.self), id, "Deinitialised!")
+        Log.deinitialization(category: String(describing: Self.self), metadata: ["id": id])
     }
     
     // MARK: - CancellableScene
