@@ -20,7 +20,7 @@ struct TabCoordinatorView<C: TabCoordinating>: View, PresentationContext {
     var body: some View {
         TabView(selection: $coordinator.selection) {
             ForEach(coordinator.tabs, id: \.id) { tab in
-                tab.scene
+                tab.tabScene
                     .tabItem {
                         Label {
                             Text(tab.tabItem.title)
@@ -56,4 +56,3 @@ struct TabCoordinatorView<C: TabCoordinating>: View, PresentationContext {
         dismissAction()
     }
 }
-

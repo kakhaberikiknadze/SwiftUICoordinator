@@ -7,6 +7,8 @@
 
 import SwiftUI
 
-protocol TabSceneProviding: SceneProviding {
+public protocol TabSceneProviding: AnyObject {
+    var id: String { get }
+    var tabScene: AnyView { get }
     var tabItem: TabItem { get }
 }

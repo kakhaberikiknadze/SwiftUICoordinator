@@ -16,7 +16,16 @@ open class TabSwiftUICoordinator<CoordinationResult>: SwiftUICoordinator<Coordin
         tabs: [SwiftUICoordinator<Void>] = []
     ) {
         self.selection = tabs.first?.id ?? ""
-        self.tabs = tabs.map(SwiftUICoordinatorTabSceneAdapter.init)
+        self.tabs = tabs
+        super.init(id: id)
+    }
+    
+    public init<T: TabSceneProviding>(
+        id: String,
+        tabs: [T]
+    ) {
+        self.selection = tabs.first?.id ?? ""
+        self.tabs = tabs
         super.init(id: id)
     }
     
@@ -30,23 +39,13 @@ open class TabSwiftUICoordinator<CoordinationResult>: SwiftUICoordinator<Coordin
         }
     }
     
-    public func setTabs(_ tabs: [SwiftUICoordinator<Void>]) {
-        self.tabs = tabs.map(SwiftUICoordinatorTabSceneAdapter.init)
+    public func setTabs<T: TabSceneProviding>(_ tabs: [T]) {
+        self.tabs = tabs
     }
 }
 
 extension TabSwiftUICoordinator: TabCoordinating {}
 
-private final class SwiftUICoordinatorTabSceneAdapter<T>: TabSceneProviding {
-    let id: String
-    private let _scene: AnyView
-    /// A scene ready to be presented inside `TabView`
-    public var scene: AnyView { _scene }
-    let tabItem: TabItem
-    
-    init(coordinator: SwiftUICoordinator<T>) {
-        id = coordinator.id
-        _scene = coordinator.start().scene
-        tabItem = coordinator.tabItem
-    }
+extension SwiftUICoordinator: TabSceneProviding {
+    public var tabScene: AnyView { start().scene }
 }

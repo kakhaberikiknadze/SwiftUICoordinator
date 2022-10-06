@@ -104,8 +104,9 @@ final class SwiftUICoordinatorTests: XCTestCase {
         weak var weakCoordinatorOne = coordinatorOne
         weak var weakCoordinatorTwo = coordinatorTwo
         
-        let coordinator: TabSwiftUICoordinator<Void> = .init(
-            id: "TAB_COORDINATOR"
+        let coordinator: TabSwiftUICoordinator<Void> = TabSwiftUICoordinator(
+            id: "TAB_COORDINATOR",
+            tabs: [SwiftUICoordinator<Void>]()
         )
         coordinator.setTabs([coordinatorOne, coordinatorTwo])
         
