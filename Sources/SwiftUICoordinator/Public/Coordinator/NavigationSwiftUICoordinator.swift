@@ -97,7 +97,7 @@ open class NavigationSwiftUICoordinator<CoordinationResult>: SwiftUICoordinator<
 
 extension NavigationSwiftUICoordinator: NavigationPushing {
     public func push<T>(_ coordinator: SwiftUICoordinator<T>) -> AnyPublisher<T, Never> {
-        coordinator.setNavigationRouter(self)
+        coordinator.navigationRouter = self
         let coordinatorId = coordinator.id
         
         coordinator.onFinish
@@ -117,6 +117,6 @@ extension NavigationSwiftUICoordinator: NavigationPushing {
 
 extension NavigationSwiftUICoordinator: NavigationRouting {
     func scene(for id: String) -> AnyView? {
-        pushedScenes[id]?.scene.erased()
+        pushedScenes[id]?.scene
     }
 }

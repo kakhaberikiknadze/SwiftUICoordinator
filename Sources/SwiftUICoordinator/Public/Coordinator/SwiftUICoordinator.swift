@@ -28,7 +28,7 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
     /// Unique identifier of the coordinator
     public let id: String
     
-    public private(set) weak var navigationRouter: NavigationPushing?
+    public internal(set) weak var navigationRouter: NavigationPushing?
     
     /// Tab Item for `TabView`.
     @Published public var tabItem: TabItem = .empty
@@ -154,13 +154,5 @@ public extension SwiftUICoordinator where CoordinationResult == Void {
     /// Call this to finish coordination with a `Void` result.
     func finish() {
         finish(result: ())
-    }
-}
-
-// MARK: - NavigationRouterChildable
-
-extension SwiftUICoordinator: NavigationRouterChildable {
-    func setNavigationRouter<R: NavigationPushing>(_ router: R) {
-        navigationRouter = router
     }
 }
