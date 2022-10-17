@@ -10,7 +10,7 @@ import SwiftUI
 // MARK: - View
 
 struct CustomTransitionerView<Content: View>: View {
-    @StateObject private var interactor = CustomTransitionerInteractor()
+    @StateObject private var context = CustomTransitionerContext()
     private let content: () -> Content
     
     init(
@@ -22,9 +22,9 @@ struct CustomTransitionerView<Content: View>: View {
     var body: some View {
         ZStack {
             content()
-                .environment(\.customTransitionerInteractor, interactor)
+                .environment(\.customTransitionerInteractor, context)
             
-            if let presentable = interactor.presentable {
+            if let presentable = context.presentable {
                 presentable.scene
                     .customTransition()
                     .zIndex(1)
@@ -42,7 +42,7 @@ protocol CustomTransitionerInteractable: ObservableObject {
 }
 
 struct CustomTransitionerInteractorEnvironmentKey: EnvironmentKey {
-    static var defaultValue: any CustomTransitionerInteractable = CustomTransitionerInteractor()
+    static var defaultValue: any CustomTransitionerInteractable = CustomTransitionerContext()
 }
 
 extension EnvironmentValues {
@@ -54,10 +54,12 @@ extension EnvironmentValues {
 
 // MARK: - Interactor
 
-final class CustomTransitionerInteractor: CustomTransitionerInteractable {
+private final class CustomTransitionerContext: ObservableObject {
     typealias Presentable = (scene: AnyView, transition: AnyTransition)
     @Published private(set) var presentable: Presentable?
-    
+}
+
+extension CustomTransitionerContext: CustomTransitionerInteractable {
     func dismiss() {
         guard presentable != nil else { return }
         withAnimation {
