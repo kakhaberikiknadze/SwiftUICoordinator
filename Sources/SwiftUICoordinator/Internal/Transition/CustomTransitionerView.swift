@@ -36,12 +36,17 @@ struct CustomTransitionerView<Content: View>: View {
 
 // MARK: - Environment
 
+protocol CustomTransitionerInteractable: ObservableObject {
+    func present<D: View>(destination: D, transition: AnyTransition)
+    func dismiss()
+}
+
 struct CustomTransitionerInteractorEnvironmentKey: EnvironmentKey {
-    static var defaultValue: CustomTransitionerInteractor = .init()
+    static var defaultValue: any CustomTransitionerInteractable = CustomTransitionerInteractor()
 }
 
 extension EnvironmentValues {
-    var customTransitionerInteractor: CustomTransitionerInteractor {
+    var customTransitionerInteractor: any CustomTransitionerInteractable {
         get { self[CustomTransitionerInteractorEnvironmentKey.self] }
         set { self[CustomTransitionerInteractorEnvironmentKey.self] = newValue }
     }
@@ -49,15 +54,20 @@ extension EnvironmentValues {
 
 // MARK: - Interactor
 
-final class CustomTransitionerInteractor: ObservableObject {
+final class CustomTransitionerInteractor: CustomTransitionerInteractable {
     typealias Presentable = (scene: AnyView, transition: AnyTransition)
     @Published private(set) var presentable: Presentable?
     
     func dismiss() {
-        presentable = nil
+        guard presentable != nil else { return }
+        withAnimation {
+            presentable = nil
+        }
     }
     
     func present<D: View>(destination: D, transition: AnyTransition) {
-        presentable = (destination.erased(), transition)
+        withAnimation {
+            presentable = (destination.erased(), transition)
+        }
     }
 }

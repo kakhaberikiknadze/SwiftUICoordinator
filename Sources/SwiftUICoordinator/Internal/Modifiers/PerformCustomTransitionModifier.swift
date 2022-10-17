@@ -30,13 +30,9 @@ struct CustomModalModifier<Destination: View>: ViewModifier {
 
     private func handlePresentation(_ isPresented: Bool) {
         if isPresented {
-            withAnimation {
-                interactor.present(destination: destination(), transition: transition())
-            }
-        } else if interactor.presentable != nil {
-            withAnimation {
-                interactor.dismiss()
-            }
+            interactor.present(destination: destination(), transition: transition())
+        } else {
+            interactor.dismiss()
         }
     }
 }
