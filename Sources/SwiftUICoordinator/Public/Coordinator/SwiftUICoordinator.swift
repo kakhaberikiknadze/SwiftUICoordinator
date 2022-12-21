@@ -29,6 +29,7 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
     public let id: String
     
     public internal(set) weak var navigationRouter: NavigationPushing?
+    fileprivate(set) weak var splitRouter: NavigationSplitting?
     
     /// Tab Item for `TabView`.
     @Published public var tabItem: TabItem = .empty
@@ -154,5 +155,24 @@ public extension SwiftUICoordinator where CoordinationResult == Void {
     /// Call this to finish coordination with a `Void` result.
     func finish() {
         finish(result: ())
+    }
+}
+
+// MARK: - Split navigation
+
+public extension SwiftUICoordinator {
+    func showDetail<T>(_ coordinator: SwiftUICoordinator<T>) -> AnyPublisher<T, Never> {
+        guard let splitRouter else { return Empty().eraseToAnyPublisher() }
+        return splitRouter.show(coordinator, context: .detail)
+    }
+}
+
+extension SplitNavigationSwiftUICoordinator {
+    func _addChild<T>(
+        _ coordinator: SwiftUICoordinator<T>,
+        context: SplitContext
+    ) {
+        coordinator.splitRouter = self
+        addChild(coordinator, context: context)
     }
 }
