@@ -88,6 +88,45 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
         assertionFailure("createScene not overridden by the sublcass.", file: #file, line: #line)
         return EmptyView().erased()
     }
+    
+    // MARK: - Split navigation
+    
+    /// Shows coordinator's presentation context as a detail content in navigation split view.
+    ///
+    /// Works only when the presenting coordinator is inside navigation split view as
+    /// a Sidebar or Supplementary content. Otherwise, fallback presentation would happen (Pushing inside navigation stack / presenting
+    /// modally).
+    ///
+    /// - Note: If `showDetail` is called by `SplitNavigationSwiftUICoordinator` and it's a triple column view,  context
+    /// won't be shown as a detail unless it's inside another `SplitNavigationSwiftUICoordinator` as
+    /// a supplementary content. Instead, fallback presentation would happen (Pushing inside navigation stack / presenting
+    /// modally). Call `show` method instead when you're in a triple column split view and need to display the scene as a part of the split view.
+    /// You can also call `show` instead of `showDetail` when you'r'e in a double column split view and it would work the same way by
+    /// displaying detail.
+    ///
+    /// - Parameter coordinator: Presented coordinator.
+    /// - Returns: Coordination result of the presented coordinator.
+    public func showDetail<T>(
+        _ coordinator: SwiftUICoordinator<T>,
+        fallbackPresentationStyle: FallbackPresentationStyle = .modal
+    ) -> AnyPublisher<T, Never> {
+        _showDetail(coordinator, fallbackPresentationStyle: fallbackPresentationStyle)
+    }
+    
+    /// Push coordinator if the desired presentation is not possible to be performed.
+    /// - Parameters:
+    ///   - coordinator: Presented coordinator
+    ///   - fallbackStyle: Modal fallback presentation style.
+    /// - Returns: Coordination result of the presented coordinator
+    func fallbackPush<T>(
+        _ coordinator: SwiftUICoordinator<T>,
+        fallbackStyle: ModalPresentationStyle
+    ) -> AnyPublisher<T, Never> {
+        guard let router = navigationRouter else {
+            return coordinate(to: coordinator, presentationStyle: fallbackStyle)
+        }
+        return router.push(coordinator)
+    }
 }
 
 // MARK: - Coordinate
@@ -158,12 +197,48 @@ public extension SwiftUICoordinator where CoordinationResult == Void {
     }
 }
 
-// MARK: - Split navigation
+// MARK: - Split navigation INTERNAL
 
-public extension SwiftUICoordinator {
-    func showDetail<T>(_ coordinator: SwiftUICoordinator<T>) -> AnyPublisher<T, Never> {
-        guard let splitRouter else { return Empty().eraseToAnyPublisher() }
+public struct FallbackPresentationStyle {
+    fileprivate enum Context {
+        case navigation
+        case modal
+    }
+    fileprivate let modalFallbackStyle: ModalPresentationStyle
+    fileprivate let context: Context
+    
+    public static var modal: Self = .modal(.sheet)
+    
+    public static func navigation(modalFallbackStyle: ModalPresentationStyle) -> Self {
+        .init(modalFallbackStyle: modalFallbackStyle, context: .navigation)
+    }
+    
+    public static func modal(_ fallbackStyle: ModalPresentationStyle) -> Self {
+        .init(modalFallbackStyle: fallbackStyle, context: .modal)
+    }
+}
+
+extension SwiftUICoordinator {
+    func _showDetail<T>(
+        _ coordinator: SwiftUICoordinator<T>,
+        fallbackPresentationStyle: FallbackPresentationStyle = .modal
+    ) -> AnyPublisher<T, Never> {
+        guard let splitRouter else {
+            return fallbackCoordinate(to: coordinator, style: fallbackPresentationStyle)
+        }
         return splitRouter.show(coordinator, context: .detail)
+    }
+    
+    private func fallbackCoordinate<T>(
+        to coordinator: SwiftUICoordinator<T>,
+        style: FallbackPresentationStyle
+    ) -> AnyPublisher<T, Never> {
+        switch style.context {
+        case .navigation:
+            return fallbackPush(coordinator, fallbackStyle: style.modalFallbackStyle)
+        case .modal:
+            return coordinate(to: coordinator, presentationStyle: style.modalFallbackStyle)
+        }
     }
 }
 

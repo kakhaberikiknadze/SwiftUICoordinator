@@ -48,7 +48,7 @@ struct NavigationSplitCoordinatorView<
     // MARK: - Body
     
     var body: some View {
-        switch router.options {
+        switch router.splitType {
         case .doubleColumn:
             renderDoubleColumnNavigation()
         case .tripleColumn:
@@ -91,41 +91,46 @@ struct NavigationSplitCoordinatorView<
 private extension NavigationSplitCoordinatorView {
     @ViewBuilder func _sidebar() -> some View {
         ZStack {
-            fakeSidebarList
+            List(selection: fakeListBinding) {}
             sidebar()
         }
     }
     
     @ViewBuilder func _content() -> some View {
         ZStack {
-            fakeContentList
-            router.sceneForContent()
+            List(selection: detailID) {}
+            router.sceneForSupplementary()
         }
     }
     
-    var fakeSidebarList: some View {
-        List(
-            selection: .init(
-                get: {
-                    router.contentID
-                },
-                set: {
-                    router.contentID = $0
-                }
-            )
-        ) {}
+    var fakeListBinding: Binding<NavigationDestinationIdentifier?> {
+        switch router.splitType {
+        case .doubleColumn:
+            return detailID
+        case .tripleColumn:
+            return supplementaryID
+        }
     }
     
-    var fakeContentList: some View {
-        List(
-            selection: .init(
-                get: {
-                    router.detailID
-                },
-                set: {
-                    router.detailID = $0
-                }
-            )
-        ) {}
+    var supplementaryID: Binding<NavigationDestinationIdentifier?> {
+        .init(
+            get: {
+                router.supplementaryID
+            },
+            set: {
+                router.supplementaryID = $0
+            }
+        )
+    }
+    
+    var detailID: Binding<NavigationDestinationIdentifier?> {
+        .init(
+            get: {
+                router.detailID
+            },
+            set: {
+                router.detailID = $0
+            }
+        )
     }
 }

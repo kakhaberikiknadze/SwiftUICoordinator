@@ -84,6 +84,18 @@ open class NavigationSwiftUICoordinator<CoordinationResult>: SwiftUICoordinator<
         navigationPath.append(identifier)
     }
     
+    /// Push coordinator if the desired presentation is not possible to be performed.
+    /// - Parameters:
+    ///   - coordinator: Presented coordinator
+    ///   - fallbackStyle: Modal fallback presentation style.
+    /// - Returns: Coordination result of the presented coordinator
+    public override func fallbackPush<T>(
+        _ coordinator: SwiftUICoordinator<T>,
+        fallbackStyle: ModalPresentationStyle
+    ) -> AnyPublisher<T, Never> {
+        push(coordinator)
+    }
+    
     func pop() {
         navigationPath.removeLast()
     }
