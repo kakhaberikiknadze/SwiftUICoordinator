@@ -94,23 +94,16 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
     /// Shows coordinator's presentation context as a detail content in navigation split view.
     ///
     /// Works only when the presenting coordinator is inside navigation split view as
-    /// a Sidebar or Supplementary content. Otherwise, fallback presentation would happen (Pushing inside navigation stack / presenting
+    /// a supplementary content. Otherwise, fallback presentation would happen (Pushing inside navigation stack / presenting
     /// modally).
-    ///
-    /// - Note: If `showDetail` is called by `SplitNavigationSwiftUICoordinator` and it's a triple column view,  context
-    /// won't be shown as a detail unless it's inside another `SplitNavigationSwiftUICoordinator` as
-    /// a supplementary content. Instead, fallback presentation would happen (Pushing inside navigation stack / presenting
-    /// modally). Call `show` method instead when you're in a triple column split view and need to display the scene as a part of the split view.
-    /// You can also call `show` instead of `showDetail` when you'r'e in a double column split view and it would work the same way by
-    /// displaying detail.
     ///
     /// - Parameter coordinator: Presented coordinator.
     /// - Returns: Coordination result of the presented coordinator.
-    public func showDetail<T>(
+    public func show<T>(
         _ coordinator: SwiftUICoordinator<T>,
         fallbackPresentationStyle: FallbackPresentationStyle = .modal
     ) -> AnyPublisher<T, Never> {
-        _showDetail(coordinator, fallbackPresentationStyle: fallbackPresentationStyle)
+        showDetail(coordinator, fallbackPresentationStyle: fallbackPresentationStyle)
     }
     
     /// Push coordinator if the desired presentation is not possible to be performed.
@@ -219,7 +212,7 @@ public struct FallbackPresentationStyle {
 }
 
 extension SwiftUICoordinator {
-    func _showDetail<T>(
+    func showDetail<T>(
         _ coordinator: SwiftUICoordinator<T>,
         fallbackPresentationStyle: FallbackPresentationStyle = .modal
     ) -> AnyPublisher<T, Never> {

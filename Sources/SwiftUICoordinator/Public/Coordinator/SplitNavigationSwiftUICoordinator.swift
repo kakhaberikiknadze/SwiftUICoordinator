@@ -72,7 +72,15 @@ open class SplitNavigationSwiftUICoordinator<CoordinationResult>: SwiftUICoordin
         )
     }
     
-    public override func showDetail<T>(
+    /// Shows coordinator's presentation context as a supplementary or a detail content in navigation split view depending on
+    /// the `SplitType`.
+    ///
+    /// If it's a double column, context is shown as a detail. If it's a triple column, then it's shown
+    /// as a supplementary content.
+    ///
+    /// - Parameter coordinator: Presented coordinator.
+    /// - Returns: Coordination result of the presented coordinator.
+    public override func show<T>(
         _ coordinator: SwiftUICoordinator<T>,
         fallbackPresentationStyle: FallbackPresentationStyle = .modal
     ) -> AnyPublisher<T, Never> {
@@ -80,25 +88,8 @@ open class SplitNavigationSwiftUICoordinator<CoordinationResult>: SwiftUICoordin
         case .doubleColumn:
             return show(coordinator, context: .detail)
         case .tripleColumn:
-            return _showDetail(coordinator, fallbackPresentationStyle: fallbackPresentationStyle)
+            return show(coordinator, context: .supplementary)
         }
-    }
-    
-    /// Show coordinator's presentation context as a supplementary content or detail depending
-    /// on split navigation type.
-    ///
-    /// If it's a double column, context is shown as a detail. If it's a triple column, then it's shown
-    /// as a supplementary content.
-    ///
-    /// - Note: If `showDetail` is called by `SplitNavigationSwiftUICoordinator`,  context
-    /// won't be shown as a detail unless it's inside another `SplitNavigationSwiftUICoordinator` as
-    /// a supplementary content. Otherwise, fallback presentation would happen (Pushing inside navigation stack / presenting
-    /// modally). Use `show` method instead when you need to display the scene as a part of the split view.
-    /// - Parameter coordinator: Presented coordinator.
-    /// - Returns: Coordination result of the presented coordinator.
-    public func show<T>(_ coordinator: SwiftUICoordinator<T>) -> AnyPublisher<T, Never> {
-        let context: SplitContext = splitType == .doubleColumn ? .detail : .supplementary
-        return show(coordinator, context: context)
     }
 }
 
