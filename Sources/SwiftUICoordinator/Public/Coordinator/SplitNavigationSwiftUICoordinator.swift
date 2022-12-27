@@ -154,6 +154,7 @@ extension SplitNavigationSwiftUICoordinator {
             supplementaryChild = coordinator.asNavigationScene()
             supplementaryID = .init(rawValue: coordinator.id)
             oldChild?.cancel()
+            detailID = nil // Remove old detail when new supplementary's added
         case .detail:
             addDetailChild(coordinator)
         }
@@ -195,6 +196,7 @@ extension SplitNavigationSwiftUICoordinator: NavigationSplitting {
         switch context {
         case .supplementary:
             supplementaryID = nil
+            detailID = nil
         case .detail:
             detailID = nil
         }
