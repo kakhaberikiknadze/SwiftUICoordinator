@@ -63,6 +63,7 @@ open class SplitNavigationSwiftUICoordinator<CoordinationResult>: SwiftUICoordin
     override func start() -> PresentationContext {
         NavigationSplitCoordinatorView(
             router: self,
+            context: self,
             presentationStyle: presentationStyle,
             onCancel: { [weak self] in
                 self?.cancel()
@@ -171,6 +172,10 @@ extension SplitNavigationSwiftUICoordinator {
         oldChild?.cancel()
     }
 }
+
+// MARK: - SplitNavigationContext
+
+extension SplitNavigationSwiftUICoordinator: SplitNavigationContext {}
 
 // MARK: - NavigationSplitting
 

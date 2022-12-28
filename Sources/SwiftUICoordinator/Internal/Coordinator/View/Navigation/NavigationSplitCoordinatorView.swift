@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct NavigationSplitCoordinatorView<
-    R: SplitNavigationRouting,
+    Router: SplitNavigationRouting,
+    Context: SplitNavigationContext,
     Sidebar: View
 >: View, PresentationContext {
     // MARK: - Environment
@@ -22,25 +23,28 @@ struct NavigationSplitCoordinatorView<
     private let cancelAction: () -> Void
     private let sidebar: () -> Sidebar
     
-    @ObservedObject private var router: R
+    @ObservedObject private var router: Router
+    @ObservedObject private var context: Context
     
     var columnVisibility: Binding<NavigationSplitViewVisibility> {
         .init(
-            get: { router.columnVisibility },
-            set: { router.columnVisibility = $0 }
+            get: { context.columnVisibility },
+            set: { context.columnVisibility = $0 }
         )
     }
     
     // MARK: - Init
     
     init(
-        router: R,
+        router: Router,
+        context: Context,
         presentationStyle: ModalPresentationStyle,
         onCancel: @escaping () -> Void,
         @ViewBuilder sidebar: @escaping () -> Sidebar
     ) {
         self.presentationStyle = presentationStyle
         self.router = router
+        self.context = context
         cancelAction = onCancel
         self.sidebar = sidebar
     }
@@ -48,7 +52,7 @@ struct NavigationSplitCoordinatorView<
     // MARK: - Body
     
     var body: some View {
-        switch router.splitType {
+        switch context.splitType {
         case let .doubleColumn(columnWidth):
             renderDoubleColumnNavigation(columnWidth)
         case let .tripleColumn(columnWidth):
@@ -67,7 +71,7 @@ struct NavigationSplitCoordinatorView<
             router.detailScene?
                 .columnWidth(using: columnWidth.detail)
         }
-        .navigationSplitViewStyle(router.splitStyle)
+        .navigationSplitViewStyle(context.splitStyle)
     }
         
     func renderTripleColumnNavigation(
@@ -81,7 +85,7 @@ struct NavigationSplitCoordinatorView<
             router.detailScene?
                 .columnWidth(using: columnWidth.detail)
         }
-        .navigationSplitViewStyle(router.splitStyle)
+        .navigationSplitViewStyle(context.splitStyle)
     }
     
     // MARK: - PresentationContext methods
@@ -119,7 +123,7 @@ private extension NavigationSplitCoordinatorView {
     }
     
     var fakeListBinding: Binding<NavigationDestinationIdentifier?> {
-        switch router.splitType {
+        switch context.splitType {
         case .doubleColumn:
             return detailID
         case .tripleColumn:
