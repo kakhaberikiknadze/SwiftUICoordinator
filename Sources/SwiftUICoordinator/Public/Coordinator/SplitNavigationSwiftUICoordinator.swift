@@ -16,6 +16,8 @@ open class SplitNavigationSwiftUICoordinator<CoordinationResult>: SwiftUICoordin
     /// Split navigation type. `doubleColumn` or `tripleColum`.
     let splitType: SplitNavigationType
     
+    let splitStyle: AnyNavigationSplitViewStyle
+    
     /// The visibility of the leading columns in a navigation split view.
     var columnVisibility: NavigationSplitViewVisibility
     
@@ -46,10 +48,12 @@ open class SplitNavigationSwiftUICoordinator<CoordinationResult>: SwiftUICoordin
     public init(
         id: String,
         splitType: SplitNavigationType = .doubleColumn(.automatic),
+        splitStyle: some NavigationSplitViewStyle = AutomaticNavigationSplitViewStyle(),
         columnVisibility: NavigationSplitViewVisibility = .automatic
     ) {
         self.splitType = splitType
         self.columnVisibility = columnVisibility
+        self.splitStyle = splitStyle.eraseToAnySplitViewStyle()
         super.init(id: id)
         setupObservers()
     }

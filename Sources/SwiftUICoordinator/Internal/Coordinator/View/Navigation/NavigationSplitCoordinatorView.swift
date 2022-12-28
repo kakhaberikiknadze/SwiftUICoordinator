@@ -67,7 +67,7 @@ struct NavigationSplitCoordinatorView<
             router.detailScene?
                 .columnWidth(using: columnWidth.detail)
         }
-        .navigationSplitViewStyle(.automatic)
+        .navigationSplitViewStyle(router.splitStyle)
     }
         
     func renderTripleColumnNavigation(
@@ -81,6 +81,7 @@ struct NavigationSplitCoordinatorView<
             router.detailScene?
                 .columnWidth(using: columnWidth.detail)
         }
+        .navigationSplitViewStyle(router.splitStyle)
     }
     
     // MARK: - PresentationContext methods

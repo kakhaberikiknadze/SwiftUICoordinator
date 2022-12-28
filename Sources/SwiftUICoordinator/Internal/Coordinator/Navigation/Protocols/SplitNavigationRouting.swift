@@ -17,4 +17,6 @@ protocol SplitNavigationRouting: ObservableObject {
     
     var supplementaryScene: AnyView? { get }
     var detailScene: AnyView? { get }
+    
+    var splitStyle: AnyNavigationSplitViewStyle { get }
 }
