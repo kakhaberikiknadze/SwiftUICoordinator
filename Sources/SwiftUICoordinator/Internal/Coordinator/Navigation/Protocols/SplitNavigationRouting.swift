@@ -11,10 +11,10 @@ protocol SplitNavigationRouting: ObservableObject {
     var splitType: SplitNavigationType { get }
     var columnVisibility: NavigationSplitViewVisibility { get set }
     
-    ///
+    // Needed as a workaround for stacked style
     var supplementaryID: NavigationDestinationIdentifier? { get set }
     var detailID: NavigationDestinationIdentifier? { get set }
     
-    func sceneForSupplementary() -> AnyView?
-    func sceneForDetail() -> AnyView?
+    var supplementaryScene: AnyView? { get }
+    var detailScene: AnyView? { get }
 }

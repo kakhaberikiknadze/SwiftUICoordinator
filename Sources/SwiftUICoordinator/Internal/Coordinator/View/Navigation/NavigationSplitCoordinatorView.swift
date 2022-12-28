@@ -49,30 +49,38 @@ struct NavigationSplitCoordinatorView<
     
     var body: some View {
         switch router.splitType {
-        case .doubleColumn:
-            renderDoubleColumnNavigation()
-        case .tripleColumn:
-            renderTripleColumnNavigation()
+        case let .doubleColumn(columnWidth):
+            renderDoubleColumnNavigation(columnWidth)
+        case let .tripleColumn(columnWidth):
+            renderTripleColumnNavigation(columnWidth)
         }
     }
     
     // MARK: - Content
     
-    func renderDoubleColumnNavigation() -> some View {
-        NavigationSplitView(
-            columnVisibility: columnVisibility,
-            sidebar: _sidebar,
-            detail: router.sceneForDetail
-        )
+    func renderDoubleColumnNavigation(
+        _ columnWidth: DoubleColumnWidth
+    ) -> some View {
+        NavigationSplitView(columnVisibility: columnVisibility) {
+            _sidebar(columnWidth: columnWidth.sidebar)
+        } detail: {
+            router.detailScene?
+                .columnWidth(using: columnWidth.detail)
+        }
+        .navigationSplitViewStyle(.automatic)
     }
         
-    func renderTripleColumnNavigation() -> some View {
-        NavigationSplitView(
-            columnVisibility: columnVisibility,
-            sidebar: _sidebar,
-            content: _content,
-            detail: router.sceneForDetail
-        )
+    func renderTripleColumnNavigation(
+        _ columnWidth: TripleColumnWidth
+    ) -> some View {
+        NavigationSplitView(columnVisibility: columnVisibility) {
+            _sidebar(columnWidth: columnWidth.sidebar)
+        } content: {
+            _content(columnWidth: columnWidth.supplementary)
+        } detail: {
+            router.detailScene?
+                .columnWidth(using: columnWidth.detail)
+        }
     }
     
     // MARK: - PresentationContext methods
@@ -89,18 +97,24 @@ struct NavigationSplitCoordinatorView<
 // MARK: - Fake list workaround
 
 private extension NavigationSplitCoordinatorView {
-    @ViewBuilder func _sidebar() -> some View {
+    @ViewBuilder func _sidebar(
+        columnWidth: SplitNavigationColumnWidth
+    ) -> some View {
         ZStack {
             List(selection: fakeListBinding) {}
             sidebar()
         }
+        .columnWidth(using: columnWidth)
     }
     
-    @ViewBuilder func _content() -> some View {
+    @ViewBuilder func _content(
+        columnWidth: SplitNavigationColumnWidth
+    ) -> some View {
         ZStack {
             List(selection: detailID) {}
-            router.sceneForSupplementary()
+            router.supplementaryScene
         }
+        .columnWidth(using: columnWidth)
     }
     
     var fakeListBinding: Binding<NavigationDestinationIdentifier?> {
@@ -132,5 +146,30 @@ private extension NavigationSplitCoordinatorView {
                 router.detailID = $0
             }
         )
+    }
+}
+
+// MARK: - Column width
+
+private struct SplitColumnWidthModifier: ViewModifier {
+    let columnType: SplitNavigationColumnWidth
+    
+    func body(content: Content) -> some View {
+        switch columnType {
+        case .automatic:
+            content
+        case let .fixed(value):
+            content
+                .navigationSplitViewColumnWidth(value)
+        case let .dynamic(min, ideal, max):
+            content
+                .navigationSplitViewColumnWidth(min: min, ideal: ideal, max: max)
+        }
+    }
+}
+
+private extension View {
+    @ViewBuilder func columnWidth(using columnType: SplitNavigationColumnWidth) -> some View {
+        modifier(SplitColumnWidthModifier(columnType: columnType))
     }
 }

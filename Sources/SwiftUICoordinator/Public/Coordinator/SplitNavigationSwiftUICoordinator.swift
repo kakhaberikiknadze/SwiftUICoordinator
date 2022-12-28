@@ -36,16 +36,16 @@ open class SplitNavigationSwiftUICoordinator<CoordinationResult>: SwiftUICoordin
     
     /// Placeholder view for supplementary content in navigation split view.
     /// - NOTE: Only available in triple column
-    public var supplementaryPlaceholder: () -> AnyView = { EmptyView().erased() }
+    public var supplementaryPlaceholderProvider: () -> AnyView = { EmptyView().erased() }
     
     /// Placeholder view for detail content in navigation split view.
-    public var detailPlaceholder: () -> AnyView { EmptyView().erased }
+    public var detailPlaceholderProvider: () -> AnyView { EmptyView().erased }
     
     // MARK: - Init
     
     public init(
         id: String,
-        splitType: SplitNavigationType = .doubleColumn,
+        splitType: SplitNavigationType = .doubleColumn(.automatic),
         columnVisibility: NavigationSplitViewVisibility = .automatic
     ) {
         self.splitType = splitType
@@ -120,12 +120,12 @@ private extension SplitNavigationSwiftUICoordinator {
 }
 
 extension SplitNavigationSwiftUICoordinator: SplitNavigationRouting {
-    func sceneForSupplementary() -> AnyView? {
-        supplementaryChild?.scene ?? supplementaryPlaceholder()
+    var supplementaryScene: AnyView? {
+        supplementaryChild?.scene ?? supplementaryPlaceholderProvider()
     }
     
-    func sceneForDetail() -> AnyView? {
-        detailChild?.scene ?? detailPlaceholder()
+    var detailScene: AnyView? {
+        detailChild?.scene ?? detailPlaceholderProvider()
     }
 }
 
