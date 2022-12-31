@@ -29,6 +29,7 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
     public let id: String
     
     public internal(set) weak var navigationRouter: NavigationPushing?
+    fileprivate(set) weak var splitRouter: NavigationSplitting?
     
     /// Tab Item for `TabView`.
     @Published public var tabItem: TabItem = .empty
@@ -86,6 +87,38 @@ open class SwiftUICoordinator<CoordinationResult>: Coordinating {
         )
         assertionFailure("createScene not overridden by the sublcass.", file: #file, line: #line)
         return EmptyView().erased()
+    }
+    
+    // MARK: - Split navigation
+    
+    /// Shows coordinator's presentation context as a detail content in navigation split view.
+    ///
+    /// Works only when the presenting coordinator is inside navigation split view as
+    /// a supplementary content. Otherwise, fallback presentation would happen (Pushing inside navigation stack / presenting
+    /// modally).
+    ///
+    /// - Parameter coordinator: Presented coordinator.
+    /// - Returns: Coordination result of the presented coordinator.
+    public func show<T>(
+        _ coordinator: SwiftUICoordinator<T>,
+        fallbackPresentationStyle: FallbackPresentationStyle = .modal
+    ) -> AnyPublisher<T, Never> {
+        showDetail(coordinator, fallbackPresentationStyle: fallbackPresentationStyle)
+    }
+    
+    /// Push coordinator if the desired presentation is not possible to be performed.
+    /// - Parameters:
+    ///   - coordinator: Presented coordinator
+    ///   - fallbackStyle: Modal fallback presentation style.
+    /// - Returns: Coordination result of the presented coordinator
+    func fallbackPush<T>(
+        _ coordinator: SwiftUICoordinator<T>,
+        fallbackStyle: ModalPresentationStyle
+    ) -> AnyPublisher<T, Never> {
+        guard let router = navigationRouter else {
+            return coordinate(to: coordinator, presentationStyle: fallbackStyle)
+        }
+        return router.push(coordinator)
     }
 }
 
@@ -154,5 +187,60 @@ public extension SwiftUICoordinator where CoordinationResult == Void {
     /// Call this to finish coordination with a `Void` result.
     func finish() {
         finish(result: ())
+    }
+}
+
+// MARK: - Split navigation INTERNAL
+
+public struct FallbackPresentationStyle {
+    fileprivate enum Context {
+        case navigation
+        case modal
+    }
+    fileprivate let modalFallbackStyle: ModalPresentationStyle
+    fileprivate let context: Context
+    
+    public static var modal: Self = .modal(.sheet)
+    
+    public static func navigation(modalFallbackStyle: ModalPresentationStyle) -> Self {
+        .init(modalFallbackStyle: modalFallbackStyle, context: .navigation)
+    }
+    
+    public static func modal(_ fallbackStyle: ModalPresentationStyle) -> Self {
+        .init(modalFallbackStyle: fallbackStyle, context: .modal)
+    }
+}
+
+extension SwiftUICoordinator {
+    func showDetail<T>(
+        _ coordinator: SwiftUICoordinator<T>,
+        fallbackPresentationStyle: FallbackPresentationStyle = .modal
+    ) -> AnyPublisher<T, Never> {
+        guard let splitRouter else {
+            return fallbackCoordinate(to: coordinator, style: fallbackPresentationStyle)
+        }
+        return splitRouter.show(coordinator, context: .detail)
+    }
+    
+    private func fallbackCoordinate<T>(
+        to coordinator: SwiftUICoordinator<T>,
+        style: FallbackPresentationStyle
+    ) -> AnyPublisher<T, Never> {
+        switch style.context {
+        case .navigation:
+            return fallbackPush(coordinator, fallbackStyle: style.modalFallbackStyle)
+        case .modal:
+            return coordinate(to: coordinator, presentationStyle: style.modalFallbackStyle)
+        }
+    }
+}
+
+extension SplitNavigationSwiftUICoordinator {
+    func _addChild<T>(
+        _ coordinator: SwiftUICoordinator<T>,
+        context: SplitContext
+    ) {
+        coordinator.splitRouter = self
+        addChild(coordinator, context: context)
     }
 }
